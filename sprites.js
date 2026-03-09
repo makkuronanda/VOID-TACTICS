@@ -49,54 +49,35 @@ var ABYSS_BOSS={draw:function(c,t){pxclr(c);var p=Math.sin(t*.12)>0,f=Math.floor
 var NEBULA_BEAST={draw:function(c,t){pxclr(c);var f=Math.floor(t/9)%4,fl=f%2===0;c.fillStyle=fl?'rgba(200,100,255,.1)':'rgba(100,0,200,.06)';c.fillRect(0,0,128,128);pxr(c,9,12,22,26,'#1a0033');pxr(c,10,13,21,25,'#2a0044');pxr(c,6,14,9,22,'#1a0033');pxr(c,22,14,25,22,'#1a0033');pxr(c,12,26,15,30,'#110022');pxr(c,16,26,19,30,'#110022');pxr(c,11,8,21,13,'#440066');pxr(c,12,9,15,12,'#cc44ff');pxr(c,17,9,20,12,'#cc44ff');c.fillStyle=fl?'rgba(200,100,255,.75)':'rgba(150,50,200,.5)';c.fillRect(12*4,9*4,4*4,4*4);c.fillRect(17*4,9*4,4*4,4*4);}};
 var STAR_COLOSSUS={draw:function(c,t){pxclr(c);var p=Math.sin(t*.1)>0,f=Math.floor(t/5)%6;c.fillStyle=p?'rgba(255,220,50,.1)':'rgba(200,150,0,.05)';c.fillRect(0,0,128,128);pxr(c,1,2,30,30,'#0a0800');pxr(c,2,3,29,29,'#1a1400');pxr(c,3,4,28,28,'#2a2000');pxr(c,5,5,26,16,'#443300');pxr(c,6,6,25,15,'#665500');pxr(c,7,7,14,13,'#ffcc00');pxr(c,18,7,25,13,'#ffcc00');c.fillStyle=p?'rgba(255,220,0,.9)':'rgba(200,160,0,.7)';c.fillRect(7*4,7*4,8*4,7*4);c.fillRect(18*4,7*4,8*4,7*4);px(c,10,8,'#ffffff');px(c,22,8,'#ffffff');var eruptH=[0,1,2,1,0,2][f%6];pxr(c,13,2-eruptH,19,6-eruptH,'#ffee88');if(p){c.strokeStyle='#ffcc00';c.lineWidth=2;c.strokeRect(1*4,2*4,30*4,29*4);}pxr(c,0,16,3,25,'#443300');pxr(c,28,14,31,23,'#443300');}};
 
-// ═══════════════════════ RYUU (DRAGON WARRIOR) SPRITE ═══════════════════════
+// ═══════════════════════ RYUU DRAGON HERO SPRITE ═══════════════════════
 var RYUU={id:'ryuu',draw:function(c,t){
   pxclr(c);
-  var b=getBlink('ryuu'), f=Math.floor(t/10)%4, bo=f===2?1:0, ho=[0,2,0,-2][f];
-  var sc='#220000', scL='#440011', horn='#ffcc00', wing='#660011', wingL='#aa0022', armor='#ddaa00';
-
-  // 1. 巨大な竜の翼（アニメーション付き）
-  var wy = 6+bo+(f===1?2:0);
-  c.shadowBlur = 15; c.shadowColor = wingL;
-  pxr(c, 2, wy, 10, wy+1, wingL); pxr(c, 20, wy, 28, wy+1, wingL); // 翼の骨格
-  pxr(c, 1, wy+2, 8, wy+8, wing); pxr(c, 22, wy+2, 30, wy+8, wing); // 翼の皮膜
-  c.shadowBlur = 0;
-
-  // 2. 尻尾（力強く地面を叩くような配置）
-  pxr(c, 5, 25+bo, 11, 28+bo, sc); px(c, 4, 29+bo, scL); px(c, 3, 30+bo, scL);
-
-  // 3. 強靭な体と重厚な肩当て
-  pxr(c, 10, 18, 20, 27-bo, sc); // 胴体
-  pxr(c, 11, 19, 19, 26-bo, '#331111'); // 腹部
-  pxr(c, 9, 17+bo, 12, 20+bo, armor); // 左肩当て
-  pxr(c, 18, 17+bo, 21, 20+bo, armor); // 右肩当て
-
-  // 4. 脚部（踏みしめるポーズ）
-  pxr(c, 11, 27-bo, 13, 31, sc); pxr(c, 17, 27-bo, 19, 31, sc);
-
-  // 5. 竜族の顔（キリッとした表情）
-  drawChibiFace(c, 15, 13+bo, '#ff3300', b, 'rgba(255,50,0,0.3)');
-  
-  // 6. 巨大な「黄金の角」と「燃えるような髪」
-  pxr(c, 10, 8+bo, 20, 13+bo, '#110000'); // 黒髪のベース
-  pxs(c, [[11,7+bo],[10,6+bo],[9,5+bo],[9,4+bo]], horn); // 左角
-  pxs(c, [[19,7+bo],[20,6+bo],[21,5+bo],[21,4+bo]], horn); // 右角
-  c.fillStyle = 'rgba(255,100,0,'+(0.4+f*0.1)+')'; // 髪の隙間から漏れる魔力
-  px(c, 15, 8+bo, '#ff6600');
-
-  // 7. 伝説の武器：黄金の竜爪（ドラゴングロー）
-  // 右手に装備された巨大な爪。発光エフェクト付き。
-  var gX = 22, gY = 16+ho;
-  c.shadowBlur = 10; c.shadowColor = '#ffdd44';
-  pxr(c, gX, gY, gX+4, gY+4, armor); // 篭手部分
-  pxr(c, gX+2, gY-4, gX+3, gY-1, '#ffffff'); // 爪1
-  pxr(c, gX+5, gY-1, gX+8, gY, '#ffffff');   // 爪2
-  pxr(c, gX+4, gY+3, gX+7, gY+4, '#ffffff'); // 爪3
-  c.shadowBlur = 0;
-  
-  // 仕上げ：体表を流れる龍脈のエフェクト
-  c.fillStyle = 'rgba(255,220,0,'+(0.2+Math.sin(t*0.2)*0.2)+')';
-  px(c, 15, 20-bo, '#fff');
+  var b=getBlink('ryuu'),f=Math.floor(t/12)%4,bo=f===2?1:0,ho=[0,1,0,-1][f],sc='#cc3300',scL='#ff5522',horn='#ffaa00',wing='#880011';
+  // Wings
+  c.fillStyle='rgba(200,50,0,'+(0.35+f*0.05)+')';
+  c.fillRect(0,(8+ho)*4,7*4,12*4);
+  c.fillRect(25*4,(8-ho)*4,7*4,12*4);
+  pxr(c,1,9+ho,6,18+ho,wing);pxr(c,25,9-ho,30,18-ho,wing);
+  // Body armor
+  pxr(c,10,17,20,27-bo,sc);pxr(c,11,18,19,26-bo,scL);
+  // Legs
+  pxr(c,11,27-bo,13,30,'#881100');pxr(c,17,27-bo,19,30,'#881100');
+  // Tail
+  pxr(c,8,24+bo,11,28+bo,sc);pxr(c,5,27+bo,9,30+bo,'#aa2200');
+  // Face
+  drawChibiFace(c,15,14+bo,'#ff4400',b,'rgba(200,50,50,0.5)');
+  // Horns
+  px(c,13,7+bo,horn);px(c,12,6+bo,horn);px(c,11,5+bo,horn);
+  px(c,17,7+bo,horn);px(c,18,6+bo,horn);px(c,19,5+bo,horn);
+  // Hair/head
+  pxr(c,11,8+bo,20,13+bo,sc);
+  pxr(c,9,10+bo,11,14+bo,sc);pxr(c,20,10+bo,22,14+bo,sc);
+  // Scales shimmer
+  c.fillStyle='rgba(255,100,0,'+(0.2+f*0.08)+')';
+  c.fillRect(11*4,(18+bo)*4,9*4,4*4);
+  // Claw weapon
+  pxr(c,22,16+ho,26,22+ho,'#ddaa00');pxr(c,23,17+ho,25,21+ho,'#ffdd44');
+  px(c,26,15+ho,'#ffdd44');px(c,27,14+ho,'#ffdd44');
 }};
 
 // 背景アニメーション管理

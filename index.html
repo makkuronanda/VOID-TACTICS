@@ -208,6 +208,14 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 @keyframes slideInChar{0%{transform:scale(2.5) translateX(-60vw);opacity:0}15%{transform:scale(3) translateX(0);opacity:1}80%{transform:scale(3) translateX(2vw);opacity:1}100%{transform:scale(2) translateX(60vw);opacity:0}}
 @keyframes popText{0%{transform:scale(0);opacity:0}15%{transform:scale(1.1);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(1.4);opacity:0}}
 
+/* CONFIRM MODAL */
+.confirm-overlay{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);animation:fadeIn .2s;}
+.confirm-box{background:var(--panel);border:2px solid var(--magenta);border-radius:14px;padding:22px 24px;text-align:center;min-width:260px;max-width:340px;animation:dropPop .3s cubic-bezier(.1,.8,.2,1);}
+.confirm-icon{font-size:36px;margin-bottom:8px;}
+.confirm-title{font-size:15px;font-weight:900;margin-bottom:6px;color:var(--magenta);}
+.confirm-body{font-size:12px;color:#889;margin-bottom:16px;line-height:1.5;}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+
 /* TOAST */
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,6,20,.97);border:1.5px solid var(--cyan);color:var(--cyan);padding:9px 20px;border-radius:18px;font-size:12px;z-index:10000;font-weight:700;pointer-events:none;animation:toastFade 2.6s forwards;white-space:nowrap;}
 @keyframes toastFade{0%{opacity:0;transform:translateX(-50%) translateY(8px)}10%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
@@ -602,77 +610,168 @@ function getEnemyForStage(stage,challenge){
 }
 
 // ═══════════════════════ EQUIPMENT SYSTEM ═══════════════════════
+// charOnly: キャラIDを指定すると専用装備になる（そのキャラしか装備できない）
 var ITEM_POOL=[
-  // Weapons
-  {id:'wood_sword',name:'木の剣',slot:'weapon',icon:'🗡',rarity:'common',stats:{atk:3}},
-  {id:'iron_sword',name:'アイアンソード',slot:'weapon',icon:'⚔',rarity:'rare',stats:{atk:7}},
-  {id:'magic_rod',name:'魔法のロッド',slot:'weapon',icon:'🪄',rarity:'rare',stats:{atk:5,ep:10}},
-  {id:'void_blade',name:'ヴォイドブレード',slot:'weapon',icon:'🌀',rarity:'epic',stats:{atk:12,def:3}},
-  {id:'star_lance',name:'スターランス',slot:'weapon',icon:'✨',rarity:'legend',stats:{atk:18,ep:15}},
-  {id:'fire_axe',name:'炎の斧',slot:'weapon',icon:'🪓',rarity:'epic',stats:{atk:14}},
-  {id:'frost_bow',name:'氷結の弓',slot:'weapon',icon:'🏹',rarity:'rare',stats:{atk:8,def:2}},
-  // Armor
-  {id:'cloth',name:'布の鎧',slot:'armor',icon:'👘',rarity:'common',stats:{hp:20,def:2}},
-  {id:'iron_armor',name:'アイアンアーマー',slot:'armor',icon:'🛡',rarity:'rare',stats:{hp:40,def:6}},
-  {id:'rune_vest',name:'ルーンベスト',slot:'armor',icon:'🧥',rarity:'rare',stats:{hp:30,ep:15}},
-  {id:'void_plate',name:'ヴォイドプレート',slot:'armor',icon:'🔵',rarity:'epic',stats:{hp:60,def:10}},
-  {id:'dragon_mail',name:'ドラゴンメイル',slot:'armor',icon:'🐉',rarity:'legend',stats:{hp:80,def:14,atk:5}},
-  {id:'shadow_cloak',name:'シャドウクローク',slot:'armor',icon:'🌑',rarity:'epic',stats:{hp:45,def:8,ep:20}},
-  // Accessories
-  {id:'ring',name:'銀の指輪',slot:'acc',icon:'💍',rarity:'common',stats:{ep:15}},
-  {id:'amulet',name:'魔法のアミュレット',slot:'acc',icon:'🔮',rarity:'rare',stats:{ep:20,hp:15}},
-  {id:'void_core',name:'ヴォイドコア',slot:'acc',icon:'💎',rarity:'epic',stats:{atk:5,ep:25,hp:20}},
-  {id:'star_gem',name:'スタージェム',slot:'acc',icon:'⭐',rarity:'legend',stats:{atk:8,ep:30,hp:30,def:5}},
-  {id:'poison_vial',name:'毒薬瓶',slot:'acc',icon:'⚗',rarity:'rare',stats:{ep:15,atk:4}},
-  {id:'lava_stone',name:'溶岩石',slot:'acc',icon:'🪨',rarity:'rare',stats:{hp:25,atk:4}},
+  // ── 共通ウェポン ──
+  {id:'wood_sword',  name:'木の剣',          slot:'weapon',icon:'🗡',rarity:'common',stats:{atk:3}},
+  {id:'iron_sword',  name:'アイアンソード',  slot:'weapon',icon:'⚔', rarity:'rare',  stats:{atk:7}},
+  {id:'magic_rod',   name:'魔法のロッド',    slot:'weapon',icon:'🪄',rarity:'rare',  stats:{atk:5,ep:10}},
+  {id:'void_blade',  name:'ヴォイドブレード',slot:'weapon',icon:'🌀',rarity:'epic',  stats:{atk:12,def:3}},
+  {id:'star_lance',  name:'スターランス',    slot:'weapon',icon:'✨',rarity:'legend',stats:{atk:18,ep:15}},
+  {id:'fire_axe',    name:'炎の斧',          slot:'weapon',icon:'🪓',rarity:'epic',  stats:{atk:14}},
+  {id:'frost_bow',   name:'氷結の弓',        slot:'weapon',icon:'🏹',rarity:'rare',  stats:{atk:8,def:2}},
+  // ── ルナ専用ウェポン ──
+  {id:'luna_wand',   name:'月輝の魔杖',      slot:'weapon',icon:'🌙',rarity:'epic',  stats:{atk:10,ep:20},  charOnly:'luna', desc:'魔法少女専用の杖。EP消費を癒す'},
+  {id:'luna_staff',  name:'スターロッド',    slot:'weapon',icon:'⭐',rarity:'legend',stats:{atk:15,ep:30},  charOnly:'luna', desc:'星の力を宿す究極の魔法杖'},
+  // ── ガント専用ウェポン ──
+  {id:'gant_blade',  name:'勇者の大剣',      slot:'weapon',icon:'🗡',rarity:'epic',  stats:{atk:16,hp:20},  charOnly:'gant', desc:'ガントの魂と共鳴する大剣'},
+  {id:'gant_blade2', name:'ブレイブエッジ',  slot:'weapon',icon:'⚔', rarity:'legend',stats:{atk:22,hp:30,def:4},charOnly:'gant',desc:'勇者の証。会心率が上昇する'},
+  // ── フォルス専用ウェポン ──
+  {id:'fors_shield', name:'イージスの盾',    slot:'weapon',icon:'🛡',rarity:'epic',  stats:{def:14,hp:25},  charOnly:'fors', desc:'鉄壁騎士の象徴。防御力が大幅UP'},
+  {id:'fors_lance',  name:'聖銀の槍',        slot:'weapon',icon:'⚡',rarity:'legend',stats:{def:18,hp:40,atk:8},charOnly:'fors',desc:'攻守一体の聖騎士の槍'},
+  // ── シャドウ専用ウェポン ──
+  {id:'shadow_dagger',name:'毒牙のダガー',   slot:'weapon',icon:'🗡',rarity:'epic',  stats:{atk:11,ep:15},  charOnly:'shadow',desc:'毒が染み込んだ暗殺者の刃'},
+  {id:'shadow_tome', name:'禁断の魔導書',    slot:'weapon',icon:'📖',rarity:'legend',stats:{atk:14,ep:28},  charOnly:'shadow',desc:'深淵の知識が宿る魔導書'},
+  // ── 共通アーマー ──
+  {id:'cloth',       name:'布の鎧',          slot:'armor', icon:'👘',rarity:'common',stats:{hp:20,def:2}},
+  {id:'iron_armor',  name:'アイアンアーマー',slot:'armor', icon:'🛡',rarity:'rare',  stats:{hp:40,def:6}},
+  {id:'rune_vest',   name:'ルーンベスト',    slot:'armor', icon:'🧥',rarity:'rare',  stats:{hp:30,ep:15}},
+  {id:'void_plate',  name:'ヴォイドプレート',slot:'armor', icon:'🔵',rarity:'epic',  stats:{hp:60,def:10}},
+  {id:'dragon_mail', name:'ドラゴンメイル',  slot:'armor', icon:'🐉',rarity:'legend',stats:{hp:80,def:14,atk:5}},
+  {id:'shadow_cloak',name:'シャドウクローク',slot:'armor', icon:'🌑',rarity:'epic',  stats:{hp:45,def:8,ep:20}},
+  // ── キャラ専用アーマー ──
+  {id:'luna_robe',   name:'星月の法衣',      slot:'armor', icon:'💜',rarity:'epic',  stats:{hp:35,ep:25,def:4},charOnly:'luna', desc:'月の加護を宿す魔法少女の法衣'},
+  {id:'gant_armor',  name:'ライオンアーマー',slot:'armor', icon:'🦁',rarity:'epic',  stats:{hp:55,def:10,atk:4},charOnly:'gant',desc:'勇者に相応しい黄金の鎧'},
+  {id:'fors_plate',  name:'鋼鉄の要塞鎧',   slot:'armor', icon:'⚙', rarity:'epic',  stats:{hp:70,def:16},  charOnly:'fors', desc:'あらゆる攻撃を跳ね返す重装甲'},
+  {id:'shadow_suit', name:'夜影の忍装束',    slot:'armor', icon:'🖤',rarity:'epic',  stats:{hp:40,ep:20,def:6},charOnly:'shadow',desc:'闇に溶け込む暗殺者の装束'},
+  // ── 共通アクセサリ ──
+  {id:'ring',        name:'銀の指輪',        slot:'acc',   icon:'💍',rarity:'common',stats:{ep:15}},
+  {id:'amulet',      name:'魔法のアミュレット',slot:'acc', icon:'🔮',rarity:'rare',  stats:{ep:20,hp:15}},
+  {id:'void_core_acc',name:'ヴォイドコア',   slot:'acc',   icon:'💎',rarity:'epic',  stats:{atk:5,ep:25,hp:20}},
+  {id:'star_gem',    name:'スタージェム',    slot:'acc',   icon:'⭐',rarity:'legend',stats:{atk:8,ep:30,hp:30,def:5}},
+  {id:'poison_vial', name:'毒薬瓶',          slot:'acc',   icon:'⚗', rarity:'rare',  stats:{ep:15,atk:4}},
+  {id:'lava_stone',  name:'溶岩石',          slot:'acc',   icon:'🪨',rarity:'rare',  stats:{hp:25,atk:4}},
+  // ── キャラ専用アクセサリ ──
+  {id:'luna_brooch', name:'星降るブローチ',  slot:'acc',   icon:'🌟',rarity:'epic',  stats:{ep:30,atk:6},   charOnly:'luna', desc:'ルナの力を解放する魔法の留め具'},
+  {id:'gant_ring',   name:'勇者の誓指輪',    slot:'acc',   icon:'💛',rarity:'epic',  stats:{atk:9,hp:25},   charOnly:'gant', desc:'勇者の誓いが宿る金の指輪'},
+  {id:'fors_seal',   name:'鉄壁の紋章',      slot:'acc',   icon:'🔷',rarity:'epic',  stats:{def:12,hp:30},  charOnly:'fors', desc:'守護を司る古代の紋章'},
+  {id:'shadow_mask', name:'闇の仮面',         slot:'acc',   icon:'🎭',rarity:'epic',  stats:{ep:22,atk:7,def:3},charOnly:'shadow',desc:'シャドウの本当の顔を隠す仮面'},
 ];
 var RARITY_WEIGHTS={common:50,rare:30,epic:15,legend:5};
 var RARITY_COLOR={common:'#aaa',rare:'#4499ff',epic:'#cc66ff',legend:'#ffd84d'};
 var RARITY_DUST={common:1,rare:2,epic:4,legend:10};
 
-function rollItem(minRarity){
-  var pool=ITEM_POOL.slice();if(minRarity==='rare')pool=pool.filter(function(i){return i.rarity!=='common';});
-  var total=pool.reduce(function(sum,i){return sum+RARITY_WEIGHTS[i.rarity];},0);
+function rollItem(minRarity, charId){
+  // 共通アイテム + そのキャラの専用アイテムのみをプールに含める
+  var pool=ITEM_POOL.filter(function(i){return !i.charOnly || i.charOnly===(charId||selectedCharId);});
+  if(minRarity==='rare')pool=pool.filter(function(i){return i.rarity!=='common';});
+  // 専用アイテムは少し出やすくする
+  var total=pool.reduce(function(sum,i){var w=RARITY_WEIGHTS[i.rarity];return sum+(i.charOnly?w*1.4:w);},0);
   var r=Math.random()*total;var acc=0;
-  for(var i=0;i<pool.length;i++){acc+=RARITY_WEIGHTS[pool[i].rarity];if(r<acc)return JSON.parse(JSON.stringify(pool[i]));}
+  for(var i=0;i<pool.length;i++){acc+=i.charOnly?RARITY_WEIGHTS[pool[i].rarity]*1.4:RARITY_WEIGHTS[pool[i].rarity];if(r<acc)return JSON.parse(JSON.stringify(pool[i]));}
   return JSON.parse(JSON.stringify(pool[0]));
 }
 function itemStatString(item){return Object.keys(item.stats).map(function(k){return k.toUpperCase()+'+'+item.stats[k];}).join(' ');}
+
+// 共有インベントリ操作
+function getSharedInventory(){if(!gameData.inventory)gameData.inventory=[];return gameData.inventory;}
+
 function getEquipBonus(){
   var bonus={atk:0,hp:0,ep:0,def:0};
   if(!curCharData||!curCharData.equipped)return bonus;
+  var inv=getSharedInventory();
   ['weapon','armor','acc'].forEach(function(slot){
-    var id=curCharData.equipped[slot];if(!id)return;
-    var inv=curCharData.inventory||[];var item=inv.find(function(i){return i._uid===id;});
-    if(!item)return;Object.keys(item.stats).forEach(function(k){bonus[k]=(bonus[k]||0)+item.stats[k];});
+    var uid=curCharData.equipped[slot];if(!uid)return;
+    var item=inv.find(function(i){return i._uid===uid;});
+    if(!item)return;
+    Object.keys(item.stats).forEach(function(k){bonus[k]=(bonus[k]||0)+item.stats[k];});
   });
   return bonus;
 }
-function addToInventory(item){
-  if(!curCharData.inventory)curCharData.inventory=[];
-  item._uid=Date.now()+'_'+Math.floor(Math.random()*10000);
-  curCharData.inventory.push(item);
+
+// あるアイテムを現在装備しているキャラIDを返す（自分以外）
+function getItemEquippedByOther(uid){
+  var others=null;
+  Object.keys(gameData.roster).forEach(function(cid){
+    if(cid===selectedCharId)return;
+    var r=gameData.roster[cid];if(!r.equipped)return;
+    if(Object.values(r.equipped).indexOf(uid)>=0)others=cid;
+  });
+  return others;
 }
+
+function addToInventory(item){
+  var inv=getSharedInventory();
+  item._uid=Date.now()+'_'+Math.floor(Math.random()*10000);
+  inv.push(item);
+}
+
 function equipItem(uid){
-  var inv=curCharData.inventory||[];var item=inv.find(function(i){return i._uid===uid;});if(!item)return;
+  var inv=getSharedInventory();
+  var item=inv.find(function(i){return i._uid===uid;});if(!item)return;
+  // 専用装備チェック
+  if(item.charOnly&&item.charOnly!==selectedCharId){
+    var ownerDef=CHARACTER_DEFS.find(function(c){return c.id===item.charOnly;});
+    showToast('⚠ '+item.name+' は '+(ownerDef?ownerDef.name:'他キャラ')+'専用装備です');return;
+  }
+  // 他キャラが装備中チェック
+  var otherCid=getItemEquippedByOther(uid);
+  if(otherCid){
+    var otherDef=CHARACTER_DEFS.find(function(c){return c.id===otherCid;});
+    showToast('⚠ '+(otherDef?otherDef.name:'他キャラ')+'が装備中です。先に外してください');return;
+  }
   if(!curCharData.equipped)curCharData.equipped={weapon:null,armor:null,acc:null};
   curCharData.equipped[item.slot]=uid;
   recalcStats();saveGame();renderEquipTab();renderHubStatus();
   showToast('🗡 '+item.name+' を装備した！');
 }
-function unequipSlot(slot){if(!curCharData.equipped)return;curCharData.equipped[slot]=null;recalcStats();saveGame();renderEquipTab();renderHubStatus();}
-function disassembleItem(uid){
-  var inv=curCharData.inventory||[];var idx=inv.findIndex(function(i){return i._uid===uid;});if(idx<0)return;
-  var item=inv[idx];
-  if(curCharData.equipped&&Object.values(curCharData.equipped).includes(uid)){showToast('装備中は分解できません');return;}
-  var dust=RARITY_DUST[item.rarity]||1;gameData.dust+=dust;
-  inv.splice(idx,1);saveGame();renderEquipTab();updateHubHeader();
-  showToast('🔮 '+item.name+' → ダスト×'+dust);
+
+function unequipSlot(slot){
+  if(!curCharData.equipped)return;
+  curCharData.equipped[slot]=null;
+  recalcStats();saveGame();renderEquipTab();renderHubStatus();
 }
+
+function disassembleItem(uid){
+  var inv=getSharedInventory();
+  var item=inv.find(function(i){return i._uid===uid;});if(!item)return;
+  // 装備中チェック（自分）
+  if(curCharData.equipped&&Object.values(curCharData.equipped).indexOf(uid)>=0){showToast('装備中は分解できません');return;}
+  // 他キャラ装備中チェック
+  var otherCid=getItemEquippedByOther(uid);
+  if(otherCid){var otherDef=CHARACTER_DEFS.find(function(c){return c.id===otherCid;});showToast('⚠ '+(otherDef?otherDef.name:'他キャラ')+'が装備中のため分解できません');return;}
+  var dust=RARITY_DUST[item.rarity]||1;
+  var rarityNames={common:'コモン',rare:'レア',epic:'エピック',legend:'レジェンド'};
+  showConfirm(
+    '⚠',
+    '装備を分解しますか？',
+    '【'+item.icon+' '+item.name+'】\n'+(item.charOnly?'★キャラ専用 ':'')+'['+rarityNames[item.rarity]+']\n'+itemStatString(item)+'\n\n分解すると🔮ダスト×'+dust+'になります。\nこの操作は元に戻せません！',
+    'var(--magenta)',
+    function(){
+      var idx=inv.findIndex(function(i){return i._uid===uid;});
+      if(idx<0)return;
+      inv.splice(idx,1);gameData.dust+=dust;saveGame();renderEquipTab();updateHubHeader();
+      showToast('🔮 '+item.name+' → ダスト×'+dust);
+    }
+  );
+}
+
 function forgeItem(){
   var cost=3;if(gameData.dust<cost){showToast('🔮 ダストが不足しています');return;}
+  var inv=getSharedInventory();if(inv.length>=40){showToast('倉庫がいっぱいです(最大40)');return;}
   gameData.dust-=cost;var item=rollItem('rare');addToInventory(item);saveGame();updateHubHeader();renderEquipTab();
   showDropPopup(item,function(){});
+}
+
+// ── 確認ダイアログ ──
+function showConfirm(icon, title, body, accentColor, onOk, okLabel){
+  var overlay=document.createElement('div');overlay.className='confirm-overlay';
+  var color=accentColor||'var(--magenta)';
+  var label=okLabel||'実行する';
+  overlay.innerHTML='<div class="confirm-box" style="border-color:'+color+'"><div class="confirm-icon">'+icon+'</div><div class="confirm-title" style="color:'+color+'">'+title+'</div><div class="confirm-body" style="white-space:pre-line;">'+body+'</div><div class="confirm-btns"><button class="btn" style="border-color:'+color+';color:'+color+';" id="conf-ok">'+label+'</button><button class="btn back" id="conf-cancel">キャンセル</button></div></div>';
+  document.body.appendChild(overlay);
+  document.getElementById('conf-ok').addEventListener('click',function(){overlay.remove();onOk();});
+  document.getElementById('conf-cancel').addEventListener('click',function(){overlay.remove();});
 }
 
 // ═══════════════════════ SKILL LEVELS ═══════════════════════
@@ -687,35 +786,44 @@ function upgradeSkill(sid){
   saveGame();renderSkillTab();updateHubHeader();showToast('✨ '+SKILLS[sid].name+' Lv.'+(lv+1)+'！');
 }
 
-// ═══════════════════════ ACHIEVEMENTS ═══════════════════════
+// ═══════════════════════ ACHIEVEMENTS (キャラ別) ═══════════════════════
+// getValue は curCharData.charStats を参照する
 var ACHIEVEMENTS=[
-  {id:'first_win',name:'初勝利',icon:'⚔',desc:'初めてステージをクリア',target:1,getValue:function(){return gameData.stats.kills;}},
-  {id:'kills10',name:'撃破10',icon:'💀',desc:'敵を10体倒す',target:10,getValue:function(){return gameData.stats.kills;}},
-  {id:'kills100',name:'百戦錬磨',icon:'🌟',desc:'敵を100体倒す',target:100,getValue:function(){return gameData.stats.kills;}},
-  {id:'kills500',name:'殲滅者',icon:'☠',desc:'敵を500体倒す',target:500,getValue:function(){return gameData.stats.kills;}},
-  {id:'coin100',name:'コレクター',icon:'🪙',desc:'コイン100枚獲得',target:100,getValue:function(){return gameData.stats.totalCoins;}},
-  {id:'coin1000',name:'大富豪',icon:'💰',desc:'コイン1000枚獲得',target:1000,getValue:function(){return gameData.stats.totalCoins;}},
-  {id:'stage5',name:'ゾーン1制覇',icon:'🌿',desc:'ステージ5をクリア',target:5,getValue:function(){return gameData.level-1;}},
-  {id:'stage10',name:'砂漠の勇者',icon:'🏜',desc:'ステージ10をクリア',target:10,getValue:function(){return gameData.level-1;}},
-  {id:'stage25',name:'虚空の征服者',icon:'🌀',desc:'全ステージクリア！',target:25,getValue:function(){return gameData.level-1;}},
-  {id:'combo5',name:'コンボマスター',icon:'🔥',desc:'コンボ5以上を達成',target:1,getValue:function(){return gameData.stats.maxCombo>=5?1:0;}},
-  {id:'challenge3',name:'チャレンジャー',icon:'⚡',desc:'チャレンジモード3回クリア',target:3,getValue:function(){return gameData.stats.challengeClears||0;}},
-  {id:'equip3',name:'装備マニア',icon:'🛡',desc:'3つのスロットを全装備',target:1,getValue:function(){if(!curCharData||!curCharData.equipped)return 0;var e=curCharData.equipped;return(e.weapon&&e.armor&&e.acc)?1:0;}},
-  {id:'awaken',name:'覚醒者',icon:'💎',desc:'VOID AWAKENINGを解放',target:1,getValue:function(){return curCharData&&curCharData.awakened?1:0;}},
-  {id:'farm10',name:'周回王',icon:'🔄',desc:'同じステージを10回以上クリア',target:10,getValue:function(){var m=0;Object.values(gameData.stats.clears||{}).forEach(function(v){if(v>m)m=v;});return m;}},
+  {id:'first_win', name:'初勝利',     icon:'⚔', desc:'このキャラで初めてクリア', target:1,   getValue:function(){return getCS('kills');}},
+  {id:'kills10',   name:'撃破10',     icon:'💀', desc:'敵を10体倒す',             target:10,  getValue:function(){return getCS('kills');}},
+  {id:'kills100',  name:'百戦錬磨',   icon:'🌟', desc:'敵を100体倒す',            target:100, getValue:function(){return getCS('kills');}},
+  {id:'kills500',  name:'殲滅者',     icon:'☠', desc:'敵を500体倒す',            target:500, getValue:function(){return getCS('kills');}},
+  {id:'coin100',   name:'コレクター', icon:'🪙', desc:'コイン100枚獲得',          target:100, getValue:function(){return getCS('totalCoins');}},
+  {id:'coin1000',  name:'大富豪',     icon:'💰', desc:'コイン1000枚獲得',         target:1000,getValue:function(){return getCS('totalCoins');}},
+  {id:'stage5',    name:'ゾーン1制覇',icon:'🌿', desc:'ステージ5をクリア',        target:5,   getValue:function(){return Math.max(0,gameData.level-1);}},
+  {id:'stage10',   name:'砂漠の勇者', icon:'🏜', desc:'ステージ10をクリア',       target:10,  getValue:function(){return Math.max(0,gameData.level-1);}},
+  {id:'stage25',   name:'虚空の征服者',icon:'🌀',desc:'全ステージクリア！',       target:25,  getValue:function(){return Math.max(0,gameData.level-1);}},
+  {id:'combo5',    name:'コンボマスター',icon:'🔥',desc:'コンボ5以上を達成',      target:1,   getValue:function(){return getCS('maxCombo')>=5?1:0;}},
+  {id:'challenge3',name:'チャレンジャー',icon:'⚡',desc:'チャレンジモード3回クリア',target:3, getValue:function(){return getCS('challengeClears');}},
+  {id:'equip3',    name:'装備マニア', icon:'🛡', desc:'3スロットを全て装備',      target:1,   getValue:function(){if(!curCharData||!curCharData.equipped)return 0;var e=curCharData.equipped;return(e.weapon&&e.armor&&e.acc)?1:0;}},
+  {id:'awaken',    name:'覚醒者',     icon:'💎', desc:'VOID AWAKENINGを解放',     target:1,   getValue:function(){return curCharData&&curCharData.awakened?1:0;}},
+  {id:'farm10',    name:'周回王',     icon:'🔄', desc:'同ステージ10回以上クリア', target:10,  getValue:function(){var m=0;Object.values(gameData.stats.clears||{}).forEach(function(v){if(v>m)m=v;});return m;}},
+  {id:'exclusive', name:'専用装備使い',icon:'🌙',desc:'キャラ専用装備を装備する', target:1,   getValue:function(){var inv=getSharedInventory();var eq=curCharData&&curCharData.equipped?curCharData.equipped:{};return ['weapon','armor','acc'].some(function(s){var uid=eq[s];if(!uid)return false;var it=inv.find(function(i){return i._uid===uid;});return it&&it.charOnly===selectedCharId;})?1:0;}},
 ];
+// curCharData.charStats のヘルパー
+function getCS(key){return curCharData&&curCharData.charStats&&curCharData.charStats[key]||0;}
+function addCS(key,val){
+  if(!curCharData)return;if(!curCharData.charStats)curCharData.charStats={};
+  curCharData.charStats[key]=(curCharData.charStats[key]||0)+(val||1);
+}
 function checkAchievements(){
-  if(!gameData.stats.unlockedAchieves)gameData.stats.unlockedAchieves=[];
+  if(!curCharData)return;
+  if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
   ACHIEVEMENTS.forEach(function(a){
-    if(gameData.stats.unlockedAchieves.includes(a.id))return;
-    var v=a.getValue();if(v>=a.target){gameData.stats.unlockedAchieves.push(a.id);showToast('🏆 実績解除: '+a.name);saveGame();}
+    if(curCharData.unlockedAchieves.indexOf(a.id)>=0)return;
+    var v=a.getValue();if(v>=a.target){curCharData.unlockedAchieves.push(a.id);showToast('🏆 実績解除: '+a.name);saveGame();}
   });
 }
-function isAchieveUnlocked(id){return gameData.stats.unlockedAchieves&&gameData.stats.unlockedAchieves.includes(id);}
+function isAchieveUnlocked(id){return curCharData&&curCharData.unlockedAchieves&&curCharData.unlockedAchieves.indexOf(id)>=0;}
 
-// ═══════════════════════ RANK ═══════════════════════
+// ═══════════════════════ RANK (キャラ別) ═══════════════════════
 function getRank(){
-  var k=gameData.stats.kills||0;
+  var k=getCS('kills');
   if(k>=500)return{name:'VOID SOVEREIGN',color:'#ff00ff'};
   if(k>=200)return{name:'DARKNESS LORD',color:'#cc66ff'};
   if(k>=100)return{name:'IRON GENERAL',color:'#ffd84d'};
@@ -732,7 +840,19 @@ function saveGame(){
 }
 function loadSave(){
   try{var raw=localStorage.getItem(SAVE_KEY);if(!raw)return false;var d=JSON.parse(raw);if(!d||!d.gameData)return false;
-    gameData=d.gameData;if(!gameData.roster)gameData.roster={};if(!gameData.stats)gameData.stats={kills:0,totalCoins:0,clears:{}};
+    gameData=d.gameData;
+    if(!gameData.roster)gameData.roster={};
+    if(!gameData.inventory)gameData.inventory=[];  // 共有インベントリ初期化
+    if(!gameData.stats)gameData.stats={kills:0,totalCoins:0,clears:{}};
+    // 旧データ互換: rosterの各キャラにinventoryがあれば共有に移行
+    Object.keys(gameData.roster).forEach(function(cid){
+      var r=gameData.roster[cid];
+      if(r.inventory&&r.inventory.length>0){
+        r.inventory.forEach(function(item){gameData.inventory.push(item);});
+        r.inventory=[];
+      }
+      if(!r.charStats)r.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
+    });
     selectedCharId=d.selectedCharId;return true;}catch(e){return false;}
 }
 function checkSaveOnStart(){
@@ -747,15 +867,32 @@ function continueGame(){
   if(!selectedCharId){switchScreen('charselect');return;}
   selectedCharDef=CHARACTER_DEFS.find(function(c){return c.id===selectedCharId;});
   if(!selectedCharDef){switchScreen('charselect');return;}
-  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},inventory:[]};
-  curCharData=gameData.roster[selectedCharId];recalcStats();switchScreen('hub');
+  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[]};
+  curCharData=gameData.roster[selectedCharId];
+  if(!curCharData.charStats)curCharData.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
+  if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
+  recalcStats();switchScreen('hub');
 }
 function newGameConfirm(){
-  if(loadSave()&&!confirm('既存データを上書きしますか？'))return;
-  gameData={coin:0,core:0,dust:0,level:1,roster:{},stats:{kills:0,totalCoins:0,clears:{},unlockedAchieves:[]}};
+  if(!localStorage.getItem(SAVE_KEY)){
+    _startNewGame();return;
+  }
+  showConfirm('⚠','既存データを上書きしますか？','セーブデータが上書きされます。\nこの操作は元に戻せません。','var(--orange)',function(){_startNewGame();});
+}
+function _startNewGame(){
+  gameData={coin:0,core:0,dust:0,level:1,roster:{},inventory:[],stats:{kills:0,totalCoins:0,clears:{}}};
   selectedCharId=null;switchScreen('charselect');
 }
-function deleteSave(){if(!confirm('削除しますか？'))return;localStorage.removeItem(SAVE_KEY);gameData={coin:0,core:0,dust:0,level:1,roster:{},stats:{kills:0,totalCoins:0,clears:{},unlockedAchieves:[]}};selectedCharId=null;checkSaveOnStart();}
+function deleteSave(){
+  showConfirm('🗑','セーブデータを削除しますか？','この操作は元に戻せません。\n全てのデータが失われます。','var(--magenta)',function(){
+    localStorage.removeItem(SAVE_KEY);
+    gameData={coin:0,core:0,dust:0,level:1,roster:{},inventory:[],stats:{kills:0,totalCoins:0,clears:{}}};
+    selectedCharId=null;
+    // ボタンを直接非表示
+    ['start-save-info','continue-btn','delete-btn'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
+    showToast('🗑 セーブデータを削除しました');
+  });
+}
 
 // ═══════════════════════ SCREEN ═══════════════════════
 function switchScreen(id){
@@ -787,8 +924,12 @@ function selectChar(id){
 function confirmCharSelect(){
   if(!selectedCharId){alert('キャラクターを選んでください');return;}
   selectedCharDef=CHARACTER_DEFS.find(function(c){return c.id===selectedCharId;});
-  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},inventory:[]};
-  curCharData=gameData.roster[selectedCharId];recalcStats();saveGame();switchScreen('hub');
+  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[]};
+  curCharData=gameData.roster[selectedCharId];
+  // 互換性: 古いデータに charStats がない場合
+  if(!curCharData.charStats)curCharData.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
+  if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
+  recalcStats();saveGame();switchScreen('hub');
 }
 function recalcStats(){
   var u=curCharData.upgrades||{};var eq=getEquipBonus();
@@ -836,8 +977,8 @@ function renderHubStatus(){
   document.getElementById('hub-atk').innerText=curCharData.atk;
   document.getElementById('hub-def').innerText=curCharData.def;
   document.getElementById('hub-maxlv').innerText=gameData.level;
-  document.getElementById('hub-kills').innerText=gameData.stats.kills||0;
-  document.getElementById('hub-totalcoin').innerText=gameData.stats.totalCoins||0;
+  document.getElementById('hub-kills').innerText=getCS('kills');
+  document.getElementById('hub-totalcoin').innerText=getCS('totalCoins');
   var rank=getRank();var rb=document.getElementById('hub-rank-badge');
   rb.innerText=rank.name;rb.style.color=rank.color;rb.style.borderColor=rank.color;rb.style.border='1px solid';rb.style.background=rank.color+'22';
   // gear summary
@@ -865,23 +1006,59 @@ function renderShopTab(){
 function renderEquipTab(){
   if(!curCharData)return;
   if(!curCharData.equipped)curCharData.equipped={weapon:null,armor:null,acc:null};
-  if(!curCharData.inventory)curCharData.inventory=[];
+  var inv=getSharedInventory();
+  // ── 装備スロット ──
   var slots=document.getElementById('equip-slots');slots.innerHTML='';
   var slotDefs=[{id:'weapon',name:'ウェポン',icon:'🗡'},{id:'armor',name:'アーマー',icon:'🛡'},{id:'acc',name:'アクセサリ',icon:'💍'}];
   slotDefs.forEach(function(sd){
-    var uid=curCharData.equipped[sd.id];var item=uid?(curCharData.inventory||[]).find(function(i){return i._uid===uid;}):null;
+    var uid=curCharData.equipped[sd.id];
+    var item=uid?inv.find(function(i){return i._uid===uid;}):null;
     var div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'');
-    if(item){div.style.borderColor=RARITY_COLOR[item.rarity];div.innerHTML='<div class="slot-icon">'+item.icon+'</div><div class="item-name" style="color:'+RARITY_COLOR[item.rarity]+'">'+item.name+'</div><div class="item-stat" style="color:var(--gold);">'+itemStatString(item)+'</div><div class="slot-name" style="margin-top:3px;cursor:pointer;color:var(--magenta);" onclick="unequipSlot(\''+sd.id+'\')">[外す]</div>';}
-    else{div.innerHTML='<div class="slot-icon" style="opacity:.3;">'+sd.icon+'</div><div class="slot-name">'+sd.name+'</div><div style="font-size:9px;color:#223;">タップで装備</div>';}
+    if(item){
+      div.style.borderColor=RARITY_COLOR[item.rarity];
+      div.innerHTML='<div class="slot-icon">'+item.icon+'</div>'
+        +(item.charOnly?'<div style="font-size:8px;color:var(--gold);font-weight:700;">★専用</div>':'')
+        +'<div class="item-name" style="color:'+RARITY_COLOR[item.rarity]+'">'+item.name+'</div>'
+        +'<div class="item-stat" style="color:var(--gold);">'+itemStatString(item)+'</div>'
+        +'<div class="slot-name" style="margin-top:3px;cursor:pointer;color:var(--magenta);" onclick="unequipSlot(\''+sd.id+'\')">[ 外す ]</div>';
+    } else {
+      div.innerHTML='<div class="slot-icon" style="opacity:.3;">'+sd.icon+'</div><div class="slot-name">'+sd.name+'</div><div style="font-size:8px;color:#223;">インベントリから装備</div>';
+    }
     slots.appendChild(div);
   });
-  var inv=curCharData.inventory||[];var grid=document.getElementById('inventory-grid');grid.innerHTML='';
-  var emptyEl=document.getElementById('inv-empty');emptyEl.style.display=inv.length===0?'block':'none';
-  document.getElementById('inv-count').innerText='('+inv.length+'/30)';
+  // ── インベントリ ──
+  var grid=document.getElementById('inventory-grid');grid.innerHTML='';
+  var emptyEl=document.getElementById('inv-empty');
+  emptyEl.style.display=inv.length===0?'block':'none';
+  document.getElementById('inv-count').innerText='('+inv.length+'/40)';
   inv.forEach(function(item){
-    var isEq=curCharData.equipped&&Object.values(curCharData.equipped).includes(item._uid);
-    var div=document.createElement('div');div.className='inv-item'+(isEq?' equipped':'');
-    div.innerHTML='<div class="inv-icon">'+item.icon+'</div><div class="inv-name" style="color:'+RARITY_COLOR[item.rarity]+'">'+item.name+'</div><div class="inv-stats">'+itemStatString(item)+'</div>'+(isEq?'<div style="font-size:8px;color:var(--gold);">装備中</div>':'<div style="font-size:8px;color:#445;margin-top:2px;display:flex;gap:3px;justify-content:center;"><span style="cursor:pointer;color:var(--cyan);" onclick="equipItem(\''+item._uid+'\')">装備</span><span style="cursor:pointer;color:var(--magenta);" onclick="disassembleItem(\''+item._uid+'\')">分解</span></div>');
+    var myEq=curCharData.equipped&&Object.values(curCharData.equipped).indexOf(item._uid)>=0;
+    var otherCid=getItemEquippedByOther(item._uid);
+    var isExclusive=!!item.charOnly;
+    var canEquip=!isExclusive||(item.charOnly===selectedCharId);
+    var otherDef=otherCid?CHARACTER_DEFS.find(function(c){return c.id===otherCid;}):null;
+    var div=document.createElement('div');div.className='inv-item'+(myEq?' equipped':'');
+    // 他キャラ装備中 → 暗くする
+    if(otherCid)div.style.opacity='0.45';
+    // 専用装備で自分が使えないもの → 暗く
+    if(isExclusive&&!canEquip)div.style.opacity='0.3';
+    var label='';
+    if(myEq)      label='<div style="font-size:8px;color:var(--gold);margin-top:1px;">✓ 装備中</div>';
+    else if(otherCid) label='<div style="font-size:8px;color:var(--magenta);margin-top:1px;">'+(otherDef?otherDef.name:'他キャラ')+'使用中</div>';
+    else if(isExclusive&&!canEquip){var ownerDef=CHARACTER_DEFS.find(function(c){return c.id===item.charOnly;});label='<div style="font-size:8px;color:#556;margin-top:1px;">'+(ownerDef?ownerDef.name:'他キャラ')+'専用</div>';}
+    else label='<div style="font-size:8px;color:#445;margin-top:2px;display:flex;gap:4px;justify-content:center;">'
+      +'<span style="cursor:pointer;color:var(--cyan);" onclick="equipItem(\''+item._uid+'\')">装備</span>'
+      +'<span style="cursor:pointer;color:var(--magenta);" onclick="disassembleItem(\''+item._uid+'\')">分解</span></div>';
+    div.innerHTML='<div class="inv-icon">'+item.icon+'</div>'
+      +(item.charOnly?'<div style="font-size:7px;color:var(--gold);font-weight:700;line-height:1;">★専用</div>':'')
+      +'<div class="inv-name" style="color:'+RARITY_COLOR[item.rarity]+'">'+item.name+'</div>'
+      +'<div class="inv-stats">'+itemStatString(item)+'</div>'
+      +label;
+    // 分解ボタンも装備中でないときは追加（装備中でも名前タップで分解確認が出て弾く）
+    if(myEq){
+      // 外すだけできる
+      div.addEventListener('click',function(){unequipSlot(Object.keys(curCharData.equipped).find(function(s){return curCharData.equipped[s]===item._uid;}));});
+    }
     grid.appendChild(div);
   });
 }
@@ -998,7 +1175,11 @@ function renderBattleEquipTags(){
   if(eq.def)row.innerHTML+='<span class="b-equip-tag">DEF+'+eq.def+'</span>';
   if(eq.ep)row.innerHTML+='<span class="b-equip-tag">EP+'+eq.ep+'</span>';
 }
-function retreatBattle(){if(!confirm('撤退？'))return;if(pAnim)pAnim.stop();if(eAnim)eAnim.stop();saveGame();switchScreen('map');}
+function retreatBattle(){
+  showConfirm('🏳','撤退しますか？','現在の戦闘を中断してマップに戻ります。\nクリア報酬は獲得できません。','#667',function(){
+    if(pAnim)pAnim.stop();if(eAnim)eAnim.stop();saveGame();switchScreen('map');
+  });
+}
 function buildCmds(){
   var pnl=document.getElementById('cmd-panel');pnl.innerHTML='';
   selectedCharDef.skills.forEach(function(sid){
@@ -1029,7 +1210,7 @@ function logMsg(msg,color){var pnl=document.getElementById('log-panel');pnl.inne
 function toggleBtns(dis){document.querySelectorAll('.skill-btn').forEach(function(b){b.disabled=dis;});}
 
 // COMBO
-function addCombo(){comboCount=Math.min(9,comboCount+1);if(!gameData.stats.maxCombo||comboCount>gameData.stats.maxCombo)gameData.stats.maxCombo=comboCount;updateComboUI();}
+function addCombo(){comboCount=Math.min(9,comboCount+1);if(!gameData.stats.maxCombo||comboCount>gameData.stats.maxCombo)gameData.stats.maxCombo=comboCount;if(comboCount>getCS('maxCombo'))addCS('maxCombo',comboCount-getCS('maxCombo'));updateComboUI();}
 function resetCombo(){comboCount=0;updateComboUI();}
 function updateComboUI(){var el=document.getElementById('combo-display');if(!el)return;if(comboCount>=2){el.innerText=comboCount+'× COMBO';el.classList.add('show');}else{el.classList.remove('show');}}
 function getComboMult(){return 1+(comboCount*0.06);}
@@ -1077,8 +1258,6 @@ function dealDmg(atk,def,mult,defState){
   var atkState=(atk===curCharData)?bState.player:bState.enemy;var av=atk.atk||10;
   atkState.buffs.forEach(function(b){if(b.type==='atk_up')av*=1.5;if(b.type==='atk_down')av*=.75;});
   defState.buffs.forEach(function(b){if(b.type==='def_up')mult*=.5;});
-  // skill level mult
-  var sid=null;selectedCharDef.skills.forEach(function(s){if(SKILLS[s]&&SKILLS[s].action===arguments.callee)sid=s;});
   // Apply combo mult for player attacks
   var comboM=(atk===curCharData)?getComboMult():1;
   // Apply defender's def stat
@@ -1118,9 +1297,14 @@ function checkEnd(){
     if(eAnim){eAnim.stop();var es=eAnim.cvs;if(es){es.style.transition='filter .5s,opacity .5s';es.style.filter='brightness(0)';es.style.opacity='.1';}}
     var baseCoin=Math.floor(22+Math.random()*30*Math.ceil(currentBattleStage/3));
     var coin=isChallenge?Math.floor(baseCoin*1.5):baseCoin;var dust=0;
-    gameData.coin+=coin;gameData.stats.kills=(gameData.stats.kills||0)+1;gameData.stats.totalCoins=(gameData.stats.totalCoins||0)+coin;
+    gameData.coin+=coin;
+    // グローバル統計
+    gameData.stats.kills=(gameData.stats.kills||0)+1;
+    gameData.stats.totalCoins=(gameData.stats.totalCoins||0)+coin;
     if(!gameData.stats.clears)gameData.stats.clears={};
     gameData.stats.clears[currentBattleStage]=(gameData.stats.clears[currentBattleStage]||0)+1;
+    // キャラ別統計
+    addCS('kills',1);addCS('totalCoins',coin);
     if(currentBattleStage>=gameData.level)gameData.level=currentBattleStage+1;
     logMsg('🪙 COIN ×'+coin+(isChallenge?' [チャレンジ+50%]':''),'var(--gold)');
     // Core drop
@@ -1133,14 +1317,14 @@ function checkEnd(){
     var itemChance=eData.cur.isBoss?0.85:(isChallenge?0.5:0.25);
     var doFinish=function(){
       if(eAnim&&eAnim.cvs){eAnim.cvs.style.filter='';eAnim.cvs.style.opacity='';}
-      if(isChallenge)gameData.stats.challengeClears=(gameData.stats.challengeClears||0)+1;
+      if(isChallenge){gameData.stats.challengeClears=(gameData.stats.challengeClears||0)+1;addCS('challengeClears',1);}
       checkAchievements();saveGame();
       showToast('🎊 Stage '+(isChallenge?'[CH] ':'')+'Clear！');
       setTimeout(function(){switchScreen('map');},900);
     };
     setTimeout(function(){
       if(Math.random()<itemChance&&curCharData.inventory&&curCharData.inventory.length<30){
-        var item=rollItem(eData.cur.isBoss?'rare':isChallenge?'rare':'common');addToInventory(item);
+        var item=rollItem(eData.cur.isBoss?'rare':isChallenge?'rare':'common', selectedCharId);addToInventory(item);
         showDropPopup(item,doFinish);
       } else {doFinish();}
     },1200);return true;
@@ -1160,5 +1344,3 @@ checkSaveOnStart();initCharSelect();
 </script>
 </body>
 </html>
-</html>
-

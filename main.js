@@ -192,6 +192,7 @@ var CHARACTER_DEFS=[
   {id:'gant',name:'ガント',title:'WARRIOR BOY',sprite:GANT,color:'#4488ee',baseHp:120,baseEp:45,baseAtk:14,baseDef:8, desc:'バランス型の剣士。勇敢な魂',statD:{hp:'★★★★',ep:'★★☆',atk:'★★★★'}, skills:['attack','heavy','rally','heal_minor','ultimate_gant'], cutscene:{bgColor:'#001133',textColor:'#4488ee',subtitle:'BRAVE SLASH',lines:['剣に...','誓う！','勇者の...','一撃！！']}},
   {id:'fors',name:'フォルス',title:'IRON KNIGHT',sprite:FORS,color:'#aabbcc',baseHp:150,baseEp:30,baseAtk:11,baseDef:14, desc:'鉄壁の重装甲騎士。盾の守護者',statD:{hp:'★★★★★',ep:'★☆☆',atk:'★★★'}, skills:['attack','shield_bash','defend','iron_wall','ultimate_fors'], cutscene:{bgColor:'#001122',textColor:'#aabbcc',subtitle:'AEGIS GUARD',lines:['盾が...','世界を...','守る...','不落！！']}},
   {id:'shadow',name:'シャドウ',title:'DARK WITCH',sprite:SHADOW,color:'#00ffaa',baseHp:90,baseEp:75,baseAtk:16,baseDef:5, desc:'毒を操る謎の魔女。闇の化身',statD:{hp:'★★☆',ep:'★★★★',atk:'★★★★'}, skills:['attack','curse','poison','soul_drain','ultimate_shadow'], cutscene:{bgColor:'#001a0d',textColor:'#00ffaa',subtitle:'ABYSS GATE',lines:['深淵が...','開く...','呪われよ...','滅べ！！']}},
+  {id:'ryuu',name:'リュウ',title:'DRAGON LORD',sprite:RYUU,color:'#ff4400',baseHp:130,baseEp:60,baseAtk:20,baseDef:10, desc:'竜族の覇者。炎と爪で戦場を制す',statD:{hp:'★★★★',ep:'★★★',atk:'★★★★★'}, skills:['attack','dragon_claw','flame_breath','dragon_roar','ultimate_ryuu'], cutscene:{bgColor:'#1a0000',textColor:'#ff4400',subtitle:'DRAGON EMPEROR',lines:['竜が...','咆える！','炎よ...','燃やせ！！']}},
 ];
 
 var SKILLS={
@@ -212,22 +213,44 @@ var SKILLS={
   ultimate_gant:  {name:'ブレイブスラッシュ',    ep:30,isUlt:true,action:function(a,d,bs){dealDmg(a,d,2.6,bs);applyBuff(a,bState.player,'def_up',2,'防御UP');}},
   ultimate_fors:  {name:'イージスガード',        ep:25,isUlt:true,action:function(a,d,bs){healHP(a,.65);applyBuff(a,bState.player,'def_up',4,'超防御UP');}},
   ultimate_shadow:{name:'アビスゲート',          ep:35,isUlt:true,action:function(a,d,bs){dealDmg(a,d,2.3,bs);applyBuff(d,bs,'poison',5,'猛毒');}},
+  dragon_claw:   {name:'ドラゴンクロー',ep:12,desc:'鋭い爪で攻撃+DEFダウン',   action:function(a,d,bs){dealDmg(a,d,1.5,bs);applyBuff(d,bs,'atk_down',2,'DEFダウン');}},
+  flame_breath:  {name:'フレイムブレス',ep:22,desc:'炎の息吹×2.2+火傷',       action:function(a,d,bs){dealDmg(a,d,2.2,bs);applyBuff(d,bs,'poison',2,'火傷');}},
+  dragon_roar:   {name:'ドラゴンロア', ep:18,desc:'咆哮でATK大幅UP+コンボ+4', action:function(a,d,bs){applyBuff(a,bState.player,'atk_up',4,'ATKアップ');comboCount=Math.min(9,comboCount+4);updateComboUI();logMsg('🐉 竜の咆哮！ATK大幅UP！','#ff4400');}},
+  ultimate_ryuu: {name:'竜皇炎滅砲',            ep:45,isUlt:true,action:function(a,d,bs){dealDmg(a,d,4.0,bs);applyBuff(d,bs,'poison',4,'業火');}},
 };
 
 var ZONES=[
-  {id:'grass',name:'GRASSLAND',emoji:'🌿',color:'#22aa44', enemies:[{name:'ゴブリン',sprite:GOBLIN,baseHp:55,baseAtk:8},{name:'フォレストトロール',sprite:FOREST_TROLL,baseHp:80,baseAtk:11}], boss:{name:'フォレストタイタン',sprite:GRASS_BOSS,baseHp:220,baseAtk:16}},
-  {id:'desert',name:'DESERT',emoji:'🏜',color:'#cc8833', enemies:[{name:'サンドスコーピオン',sprite:SCORPION,baseHp:65,baseAtk:10},{name:'ミイラ兵',sprite:MUMMY,baseHp:90,baseAtk:13}], boss:{name:'デザートファラオ',sprite:DESERT_BOSS,baseHp:260,baseAtk:19}},
-  {id:'void',name:'VOID SECTOR',emoji:'🌀',color:'#cc66ff', enemies:[{name:'ヴォイドクリーパー',sprite:VOID_CREEPER,baseHp:75,baseAtk:12},{name:'シャドウスペクター',sprite:SHADOW_SPECTER,baseHp:95,baseAtk:15}], boss:{name:'ヴォイドオーバーロード',sprite:VOID_BOSS,baseHp:300,baseAtk:22}},
-  {id:'ice',name:'ICE TUNDRA',emoji:'❄',color:'#88ddff', enemies:[{name:'アイスウルフ',sprite:ICE_WOLF,baseHp:80,baseAtk:13},{name:'フロストジャイアント',sprite:FROST_GIANT,baseHp:110,baseAtk:16}], boss:{name:'フロストドラゴン',sprite:ICE_BOSS,baseHp:340,baseAtk:24}},
-  {id:'magma',name:'MAGMA CORE',emoji:'🔥',color:'#ff5511', enemies:[{name:'ラバゴーレム',sprite:LAVA_GOLEM,baseHp:95,baseAtk:15},{name:'ファイアデーモン',sprite:FIRE_DEMON,baseHp:115,baseAtk:18}], boss:{name:'インフェルノソブリン',sprite:MAGMA_BOSS,baseHp:380,baseAtk:27}},
+  {id:'grass',   name:'GRASSLAND',    emoji:'🌿',color:'#22aa44',world:1, enemies:[{name:'ゴブリン',sprite:GOBLIN,baseHp:55,baseAtk:8},{name:'フォレストトロール',sprite:FOREST_TROLL,baseHp:80,baseAtk:11}],  boss:{name:'フォレストタイタン',sprite:GRASS_BOSS,baseHp:220,baseAtk:16}},
+  {id:'desert',  name:'DESERT',       emoji:'🏜',color:'#cc8833',world:1, enemies:[{name:'サンドスコーピオン',sprite:SCORPION,baseHp:65,baseAtk:10},{name:'ミイラ兵',sprite:MUMMY,baseHp:90,baseAtk:13}],    boss:{name:'デザートファラオ',sprite:DESERT_BOSS,baseHp:260,baseAtk:19}},
+  {id:'void',    name:'VOID SECTOR',  emoji:'🌀',color:'#cc66ff',world:1, enemies:[{name:'ヴォイドクリーパー',sprite:VOID_CREEPER,baseHp:75,baseAtk:12},{name:'シャドウスペクター',sprite:SHADOW_SPECTER,baseHp:95,baseAtk:15}], boss:{name:'ヴォイドオーバーロード',sprite:VOID_BOSS,baseHp:300,baseAtk:22}},
+  {id:'ice',     name:'ICE TUNDRA',   emoji:'❄',color:'#88ddff',world:1, enemies:[{name:'アイスウルフ',sprite:ICE_WOLF,baseHp:80,baseAtk:13},{name:'フロストジャイアント',sprite:FROST_GIANT,baseHp:110,baseAtk:16}], boss:{name:'フロストドラゴン',sprite:ICE_BOSS,baseHp:340,baseAtk:24}},
+  {id:'magma',   name:'MAGMA CORE',   emoji:'🔥',color:'#ff5511',world:1, enemies:[{name:'ラバゴーレム',sprite:LAVA_GOLEM,baseHp:95,baseAtk:15},{name:'ファイアデーモン',sprite:FIRE_DEMON,baseHp:115,baseAtk:18}],  boss:{name:'インフェルノソブリン',sprite:MAGMA_BOSS,baseHp:380,baseAtk:27}},
+  {id:'abyss',   name:'ABYSS REALM',  emoji:'🌊',color:'#00ffcc',world:2, enemies:[{name:'アビスレイス',sprite:ABYSS_WRAITH,baseHp:110,baseAtk:20},{name:'クリスタルゴーレム',sprite:CRYSTAL_GOLEM,baseHp:135,baseAtk:22}], boss:{name:'アビスオーバーロード',sprite:ABYSS_BOSS,baseHp:520,baseAtk:34}},
+  {id:'nebula',  name:'NEBULA VOID',  emoji:'💜',color:'#cc44ff',world:2, enemies:[{name:'ネビュラビースト',sprite:NEBULA_BEAST,baseHp:125,baseAtk:23},{name:'ヴォイドドラゴン',sprite:VOID_DRAGON,baseHp:145,baseAtk:26}], boss:{name:'ネビュラタイタン',sprite:VOID_BOSS,baseHp:600,baseAtk:38}},
+  {id:'crystal', name:'CRYSTAL CAVERN',emoji:'💎',color:'#00eeff',world:2, enemies:[{name:'クリスタルゴーレム',sprite:CRYSTAL_GOLEM,baseHp:140,baseAtk:25},{name:'ファントムナイト',sprite:PHANTOM_KNIGHT,baseHp:160,baseAtk:28}], boss:{name:'クリスタルドラゴン',sprite:ICE_BOSS,baseHp:680,baseAtk:42}},
+  {id:'stellar', name:'STELLAR RUINS', emoji:'⭐',color:'#ffcc00',world:2, enemies:[{name:'ヴォイドドラゴン',sprite:VOID_DRAGON,baseHp:155,baseAtk:28},{name:'スターコロッサス',sprite:STAR_COLOSSUS,baseHp:180,baseAtk:32}], boss:{name:'ステラータイタン',sprite:STAR_COLOSSUS,baseHp:760,baseAtk:46}},
+  {id:'finalabyss',name:'FINAL ABYSS',emoji:'🔮',color:'#ff44aa',world:2, enemies:[{name:'ファントムナイト',sprite:PHANTOM_KNIGHT,baseHp:170,baseAtk:32},{name:'アビスレイス',sprite:ABYSS_WRAITH,baseHp:195,baseAtk:36}], boss:{name:'THE VOID SOVEREIGN',sprite:ABYSS_BOSS,baseHp:900,baseAtk:55}},
 ];
 
-function getStageInfo(stage){var z=Math.floor((stage-1)/5)%ZONES.length,n=(stage-1)%5,isBoss=n===4;return{zone:ZONES[z],isBoss:isBoss,zoneIdx:z,inZone:n};}
+function getStageInfo(stage){
+  var zoneIdx=Math.floor((stage-1)/5);
+  if(zoneIdx>=ZONES.length)zoneIdx=ZONES.length-1;
+  var n=(stage-1)%5,isBoss=n===4;
+  return{zone:ZONES[zoneIdx],isBoss:isBoss,zoneIdx:zoneIdx,inZone:n};
+}
 function getEnemyForStage(stage,challenge){
   var info=getStageInfo(stage),z=info.zone,sc=Math.floor((stage-1)/5),hm=1+sc*0.32,am=1+sc*0.26,cm=challenge?1.5:1.0;
   if(info.isBoss)return{name:z.boss.name,sprite:z.boss.sprite,isBoss:true,maxHp:Math.floor(z.boss.baseHp*hm*cm+(stage-1)*18),atk:Math.floor(z.boss.baseAtk*am*cm+(stage-1)*2.5)};
   var pick=z.enemies[Math.floor(Math.random()*z.enemies.length)];
   return{name:pick.name,sprite:pick.sprite,isBoss:false,maxHp:Math.floor(pick.baseHp*hm*cm+(stage-1)*14),atk:Math.floor(pick.baseAtk*am*cm+(stage-1)*2)};
+}
+function getCharLevel(){return curCharData&&curCharData.charLevel?curCharData.charLevel:1;}
+function setCharLevel(lv){if(curCharData)curCharData.charLevel=lv;}
+function isRyuuUnlocked(){
+  if(!gameData.roster)return false;
+  return Object.keys(gameData.roster).some(function(cid){
+    var r=gameData.roster[cid];return r&&r.charLevel&&r.charLevel>=26;
+  });
 }
 
 var ITEM_POOL=[
@@ -364,15 +387,18 @@ var ACHIEVEMENTS=[
   {id:'kills500',  name:'殲滅者',     icon:'☠', desc:'敵を500体倒す',            target:500, getValue:function(){return getCS('kills');}},
   {id:'coin100',   name:'コレクター', icon:'🪙', desc:'コイン100枚獲得',          target:100, getValue:function(){return getCS('totalCoins');}},
   {id:'coin1000',  name:'大富豪',     icon:'💰', desc:'コイン1000枚獲得',         target:1000,getValue:function(){return getCS('totalCoins');}},
-  {id:'stage5',    name:'ゾーン1制覇',icon:'🌿', desc:'ステージ5をクリア',        target:5,   getValue:function(){return Math.max(0,gameData.level-1);}},
-  {id:'stage10',   name:'砂漠の勇者', icon:'🏜', desc:'ステージ10をクリア',       target:10,  getValue:function(){return Math.max(0,gameData.level-1);}},
-  {id:'stage25',   name:'虚空の征服者',icon:'🌀',desc:'全ステージクリア！',       target:25,  getValue:function(){return Math.max(0,gameData.level-1);}},
+  {id:'stage5',    name:'ゾーン1制覇',icon:'🌿', desc:'ステージ5をクリア',        target:5,   getValue:function(){return Math.max(0,getCharLevel()-1);}},
+  {id:'stage10',   name:'砂漠の勇者', icon:'🏜', desc:'ステージ10をクリア',       target:10,  getValue:function(){return Math.max(0,getCharLevel()-1);}},
+  {id:'stage25',   name:'世界の征服者',icon:'🌀',desc:'WORLD1全ステージクリア！', target:25,  getValue:function(){return Math.max(0,getCharLevel()-1);}},
+  {id:'stage30',   name:'深淵の探求者',icon:'🌊',desc:'WORLD2 ZONE1制覇',        target:30,  getValue:function(){return Math.max(0,getCharLevel()-1);}},
+  {id:'stage50',   name:'深淵の覇者', icon:'🔮', desc:'WORLD2全ステージクリア！', target:50,  getValue:function(){return Math.max(0,getCharLevel()-1);}},
   {id:'combo5',    name:'コンボマスター',icon:'🔥',desc:'コンボ5以上を達成',      target:1,   getValue:function(){return getCS('maxCombo')>=5?1:0;}},
   {id:'challenge3',name:'チャレンジャー',icon:'⚡',desc:'チャレンジモード3回クリア',target:3, getValue:function(){return getCS('challengeClears');}},
   {id:'equip3',    name:'装備マニア', icon:'🛡', desc:'3スロットを全て装備',      target:1,   getValue:function(){if(!curCharData||!curCharData.equipped)return 0;var e=curCharData.equipped;return(e.weapon&&e.armor&&e.acc)?1:0;}},
   {id:'awaken',    name:'覚醒者',     icon:'💎', desc:'VOID AWAKENINGを解放',     target:1,   getValue:function(){return curCharData&&curCharData.awakened?1:0;}},
   {id:'farm10',    name:'周回王',     icon:'🔄', desc:'同ステージ10回以上クリア', target:10,  getValue:function(){var m=0;Object.values(gameData.stats.clears||{}).forEach(function(v){if(v>m)m=v;});return m;}},
   {id:'exclusive', name:'専用装備使い',icon:'🌙',desc:'キャラ専用装備を装備する', target:1,   getValue:function(){var inv=getSharedInventory();var eq=curCharData&&curCharData.equipped?curCharData.equipped:{};return['weapon','armor','acc'].some(function(s){var uid=eq[s];if(!uid)return false;var it=inv.find(function(i){return i._uid===uid;});return it&&it.charOnly===selectedCharId;})?1:0;}},
+  {id:'dragon_lord',name:'竜族使い', icon:'🐉', desc:'リュウでステージ10クリア',  target:1,   getValue:function(){if(selectedCharId!=='ryuu')return 0;return getCharLevel()-1>=10?1:0;}},
 ];
 function getCS(key){return curCharData&&curCharData.charStats&&curCharData.charStats[key]||0;}
 function addCS(key,val){if(!curCharData)return;if(!curCharData.charStats)curCharData.charStats={};curCharData.charStats[key]=(curCharData.charStats[key]||0)+(val||1);}
@@ -437,10 +463,11 @@ function continueGame(){
   if(!selectedCharId){switchScreen('charselect');return;}
   selectedCharDef=CHARACTER_DEFS.find(function(c){return c.id===selectedCharId;});
   if(!selectedCharDef){switchScreen('charselect');return;}
-  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[]};
+  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[],charLevel:1};
   curCharData=gameData.roster[selectedCharId];
   if(!curCharData.charStats)curCharData.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
   if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
+  if(!curCharData.charLevel)curCharData.charLevel=gameData.level||1;
   recalcStats();switchScreen('hub');
 }
 
@@ -516,10 +543,11 @@ function selectChar(id){
 function confirmCharSelect(){
   if(!selectedCharId){alert('キャラクターを選んでください');return;}
   selectedCharDef=CHARACTER_DEFS.find(function(c){return c.id===selectedCharId;});
-  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[]};
+  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[],charLevel:1};
   curCharData=gameData.roster[selectedCharId];
   if(!curCharData.charStats)curCharData.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
   if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
+  if(!curCharData.charLevel)curCharData.charLevel=1;
   recalcStats();saveGame();switchScreen('hub');
 }
 function recalcStats(){
@@ -660,41 +688,66 @@ function buyVoidAwaken2(){if(!curCharData.awakened||curCharData.awakened2)return
 
 function buildMap(){
   document.getElementById('map-coin').innerText=gameData.coin;
+  var charLv=getCharLevel();
   var body=document.getElementById('map-body');body.innerHTML='';
-  for(var z=0;z<ZONES.length;z++){
-    var zone=ZONES[z],zStart=z*5+1,zEnd=z*5+5;
-    var block=document.createElement('div');block.className='zone-block';block.style.borderColor=zone.color+'22';
-    var hdr=document.createElement('div');hdr.className='zone-header';
-    hdr.style.background='linear-gradient(90deg,'+zone.color+'1a,transparent)';hdr.style.color=zone.color;
-    hdr.innerHTML='<span style="font-size:15px;">'+zone.emoji+'</span><span>ZONE '+(z+1)+': '+zone.name+'</span>';
-    block.appendChild(hdr);
-    var row=document.createElement('div');row.className='zone-stages';
-    for(var s=zStart;s<=zEnd;s++){
-      if(s>zStart){var line=document.createElement('div');line.className='stage-line';line.style.background=s<=gameData.level?zone.color+'55':'#1a2040';row.appendChild(line);}
-      var node=document.createElement('div');node.className='stage-node';
-      var isBoss=(s-1)%5===4,isDone=s<gameData.level,isCurrent=s===gameData.level,isLocked=s>gameData.level;
-      var clears=(gameData.stats.clears&&gameData.stats.clears[s])||0;
-      var circle=document.createElement('div');circle.className='stage-circle'+(isBoss?' boss':'')+(isCurrent?' current':'')+(isLocked?' locked':'');
-      circle.style.borderColor=isBoss?'var(--gold)':zone.color;circle.style.color=isBoss?'var(--gold)':zone.color;
-      if(isDone||isCurrent)circle.style.background=zone.color+'22';
-      var sn=document.createElement('span');sn.className='sn';sn.innerText=isDone?'✓':s;circle.appendChild(sn);
-      var lbl=document.createElement('div');lbl.className='stage-label';lbl.style.color=isBoss?'var(--gold)':zone.color;lbl.innerText=isBoss?'BOSS':'Lv.'+s;
-      var clrSpan=document.createElement('div');clrSpan.className='stage-clears';clrSpan.innerText=clears>0?'×'+clears:'';
-      node.appendChild(circle);node.appendChild(lbl);node.appendChild(clrSpan);
-      if(!isLocked){
-        (function(stg,cir){
-          cir.addEventListener('click',function(e){e.stopPropagation();startBattle(stg,false);});
-          var pressTimer=null;
-          cir.addEventListener('touchstart',function(){pressTimer=setTimeout(function(){startBattle(stg,true);},600);});
-          cir.addEventListener('touchend',function(){clearTimeout(pressTimer);});
-          cir.addEventListener('dblclick',function(){startBattle(stg,true);});
-          if(clears>0&&!isBoss){var cb=document.createElement('div');cb.className='challenge-badge';cb.innerText='CH';cir.appendChild(cb);}
-        })(s,circle);
-      }
-      row.appendChild(node);
+  var worlds=[
+    {num:1,name:'WORLD 1: THE KNOWN REALM',color:'#4488ff',emoji:'🌍',zStart:0,zEnd:5},
+    {num:2,name:'WORLD 2: THE ABYSS',color:'#00ffcc',emoji:'🌊',zStart:5,zEnd:10},
+  ];
+  worlds.forEach(function(w){
+    if(w.num===2&&charLv<=25){
+      var lockedDiv=document.createElement('div');
+      lockedDiv.style.cssText='text-align:center;padding:22px;border:2px dashed #1a2040;border-radius:12px;margin-bottom:14px;';
+      lockedDiv.innerHTML='<div style="font-size:30px;margin-bottom:8px;">🔒</div>'
+        +'<div style="font-family:Orbitron,sans-serif;font-size:13px;color:#334;letter-spacing:2px;">WORLD 2: THE ABYSS</div>'
+        +'<div style="font-size:10px;color:#223;margin-top:6px;">WORLD 1 全ステージクリアで解放</div>'
+        +'<div style="font-size:10px;color:#556;margin-top:3px;">現在の進捗: Stage '+(charLv-1)+' / 25</div>';
+      body.appendChild(lockedDiv);
+      return;
     }
-    block.appendChild(row);body.appendChild(block);
-  }
+    var wDiv=document.createElement('div');
+    wDiv.style.cssText='margin-bottom:18px;border:1px solid '+w.color+'33;border-radius:12px;overflow:hidden;';
+    var wHdr=document.createElement('div');
+    wHdr.style.cssText='padding:8px 14px;background:linear-gradient(90deg,'+w.color+'22,transparent);font-family:Orbitron,sans-serif;font-size:12px;color:'+w.color+';letter-spacing:2px;display:flex;align-items:center;gap:8px;font-weight:900;';
+    wHdr.innerHTML='<span style="font-size:16px;">'+w.emoji+'</span><span>'+w.name+'</span>';
+    if(w.num===2)wHdr.innerHTML+='<span style="font-size:9px;background:'+w.color+'22;border:1px solid '+w.color+'55;padding:2px 8px;border-radius:8px;margin-left:4px;color:'+w.color+';">NEW</span>';
+    wDiv.appendChild(wHdr);
+    for(var z=w.zStart;z<w.zEnd;z++){
+      var zone=ZONES[z],stageBase=z*5+1;
+      var block=document.createElement('div');block.style.cssText='border-top:1px solid #0d1525;';
+      var hdr=document.createElement('div');hdr.className='zone-header';
+      hdr.style.background='linear-gradient(90deg,'+zone.color+'1a,transparent)';hdr.style.color=zone.color;
+      hdr.innerHTML='<span style="font-size:13px;">'+zone.emoji+'</span><span>ZONE '+(z+1)+': '+zone.name+'</span>';
+      block.appendChild(hdr);
+      var row=document.createElement('div');row.className='zone-stages';
+      for(var s=stageBase;s<=stageBase+4;s++){
+        if(s>stageBase){var line=document.createElement('div');line.className='stage-line';line.style.background=s<=charLv?zone.color+'55':'#1a2040';row.appendChild(line);}
+        var node=document.createElement('div');node.className='stage-node';
+        var isBoss=(s-1)%5===4,isDone=s<charLv,isCurrent=s===charLv,isLocked=s>charLv;
+        var clears=(curCharData&&curCharData.charClears&&curCharData.charClears[s])||0;
+        var circle=document.createElement('div');circle.className='stage-circle'+(isBoss?' boss':'')+(isCurrent?' current':'')+(isLocked?' locked':'');
+        circle.style.borderColor=isBoss?'var(--gold)':zone.color;circle.style.color=isBoss?'var(--gold)':zone.color;
+        if(isDone||isCurrent)circle.style.background=zone.color+'22';
+        var sn=document.createElement('span');sn.className='sn';sn.innerText=isDone?'✓':s;circle.appendChild(sn);
+        var lbl=document.createElement('div');lbl.className='stage-label';lbl.style.color=isBoss?'var(--gold)':zone.color;lbl.innerText=isBoss?'BOSS':'Lv.'+s;
+        var clrSpan=document.createElement('div');clrSpan.className='stage-clears';clrSpan.innerText=clears>0?'×'+clears:'';
+        node.appendChild(circle);node.appendChild(lbl);node.appendChild(clrSpan);
+        if(!isLocked){
+          (function(stg,cir){
+            cir.addEventListener('click',function(e){e.stopPropagation();startBattle(stg,false);});
+            var pressTimer=null;
+            cir.addEventListener('touchstart',function(){pressTimer=setTimeout(function(){startBattle(stg,true);},600);});
+            cir.addEventListener('touchend',function(){clearTimeout(pressTimer);});
+            cir.addEventListener('dblclick',function(){startBattle(stg,true);});
+            if(clears>0&&!isBoss){var cb=document.createElement('div');cb.className='challenge-badge';cb.innerText='CH';cir.appendChild(cb);}
+          })(s,circle);
+        }
+        row.appendChild(node);
+      }
+      block.appendChild(row);wDiv.appendChild(block);
+    }
+    body.appendChild(wDiv);
+  });
   var hint=document.createElement('div');
   hint.style.cssText='text-align:center;padding:10px;font-size:10px;color:#334;';
   hint.innerText='💡 クリア済みステージは周回可能 | ダブルタップ/長押し = チャレンジモード (+50%報酬)';
@@ -885,8 +938,13 @@ function checkEnd(){
     gameData.stats.totalCoins=(gameData.stats.totalCoins||0)+coin;
     if(!gameData.stats.clears)gameData.stats.clears={};
     gameData.stats.clears[currentBattleStage]=(gameData.stats.clears[currentBattleStage]||0)+1;
+    if(!curCharData.charClears)curCharData.charClears={};
+    curCharData.charClears[currentBattleStage]=(curCharData.charClears[currentBattleStage]||0)+1;
     addCS('kills',1);addCS('totalCoins',coin);
+    var prevLv=getCharLevel();
+    if(currentBattleStage>=getCharLevel())setCharLevel(currentBattleStage+1);
     if(currentBattleStage>=gameData.level)gameData.level=currentBattleStage+1;
+    var unlockedWorld2=prevLv<=25&&getCharLevel()>=26;
     logMsg('🪙 COIN ×'+coin+(isChallenge?' [チャレンジ+50%]':''),'var(--gold)');
     var coreChance=eData.cur.isBoss?1.0:(isChallenge?0.35:0.18);
     if(Math.random()<coreChance){gameData.core++;logMsg('💎 VOID CORE ×1 ドロップ！','var(--purple)');}
@@ -898,7 +956,22 @@ function checkEnd(){
       if(isChallenge){gameData.stats.challengeClears=(gameData.stats.challengeClears||0)+1;addCS('challengeClears',1);}
       checkAchievements();saveGame();
       showToast('🎊 Stage '+(isChallenge?'[CH] ':'')+'Clear！');
-      setTimeout(function(){switchScreen('map');},900);
+      if(unlockedWorld2){
+        setTimeout(function(){
+          var ov=document.createElement('div');
+          ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;';
+          ov.innerHTML='<div style="text-align:center;padding:36px 28px;border:2px solid #00ffcc;border-radius:18px;background:#050e1a;max-width:300px;">'
+            +'<div style="font-size:40px;margin-bottom:10px;">🌊</div>'
+            +'<div style="font-family:Orbitron,sans-serif;font-size:18px;color:#00ffcc;letter-spacing:3px;font-weight:900;margin-bottom:8px;">WORLD 2 UNLOCKED!</div>'
+            +'<div style="font-family:Orbitron,sans-serif;font-size:13px;color:#aaa;margin-bottom:6px;">THE ABYSS</div>'
+            +'<div style="font-size:11px;color:#556;margin-bottom:18px;">深淵の扉が開かれた…</div>'
+            +'<button style="background:#00ffcc22;border:1px solid #00ffcc;color:#00ffcc;padding:10px 28px;border-radius:8px;font-family:Orbitron,sans-serif;font-size:12px;cursor:pointer;" onclick="this.parentNode.parentNode.remove();switchScreen(\'map\');">マップへ進む</button>'
+            +'</div>';
+          document.body.appendChild(ov);
+        },700);
+      } else {
+        setTimeout(function(){switchScreen('map');},900);
+      }
     };
     setTimeout(function(){
       var inv=getSharedInventory();

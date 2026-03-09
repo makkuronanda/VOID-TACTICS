@@ -6,303 +6,15 @@
 <title>VOID TACTICS 7.0</title>
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 
-<!-- ============================================================
-  FIREBASE SETUP（以下の設定を自分のFirebaseプロジェクトで置換）
-  1. https://console.firebase.google.com でプロジェクト作成
-  2. Authentication → Sign-in method → Google / Apple を有効化
-  3. Firestore Database を作成（本番 or テストモード）
-  4. プロジェクト設定 → ウェブアプリ → SDK設定・構成 よりコピー
-  ============================================================ -->
+<link rel="stylesheet" href="style.css">
+
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-<style>
-:root{
-  --cyan:#00e8ff;--magenta:#ff3399;--gold:#ffd84d;--green:#44ffaa;
-  --purple:#cc66ff;--orange:#ff8833;--ice:#88ddff;--magma:#ff5511;
-  --red:#ff3333;--bg:#06080f;--panel:rgba(8,12,26,0.9);--border:rgba(0,232,255,0.3);
-}
-*{box-sizing:border-box;-webkit-user-select:none;user-select:none;font-family:'M PLUS Rounded 1c',sans-serif;-webkit-tap-highlight-color:transparent;}
-body{margin:0;background:var(--bg);overflow:hidden;display:flex;justify-content:center;align-items:center;height:100dvh;width:100vw;}
-#bg-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
-.wrap{position:relative;z-index:1;width:100%;max-width:1040px;height:100dvh;display:flex;flex-direction:column;overflow:hidden;}
-body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.06) 3px,rgba(0,0,0,.06) 4px);pointer-events:none;z-index:9998;}
-
-/* BUTTONS */
-.btn{background:rgba(0,232,255,.07);border:1.5px solid var(--cyan);color:var(--cyan);padding:7px 14px;cursor:pointer;transition:.15s;font-weight:700;font-size:12px;letter-spacing:.4px;border-radius:5px;white-space:nowrap;}
-.btn:hover,.btn:active{background:var(--cyan);color:#000;box-shadow:0 0 14px var(--cyan);}
-.btn:disabled{border-color:#333!important;color:#444!important;background:transparent!important;cursor:not-allowed;box-shadow:none!important;}
-.btn.gold{border-color:var(--gold);color:var(--gold);background:rgba(255,216,77,.07);}
-.btn.gold:hover,.btn.gold:active{background:var(--gold);color:#000;box-shadow:0 0 14px var(--gold);}
-.btn.big{font-size:15px;padding:11px 28px;border-radius:8px;min-height:46px;}
-.btn.sm{font-size:10px;padding:4px 10px;}
-.btn.back{border-color:#334;color:#667;font-size:11px;padding:5px 11px;}
-.btn.back:hover{border-color:var(--cyan);color:var(--cyan);}
-.btn.magenta{border-color:var(--magenta);color:var(--magenta);background:rgba(255,51,153,.07);}
-.btn.magenta:hover{background:var(--magenta);color:#fff;}
-.btn.purple{border-color:var(--purple);color:var(--purple);background:rgba(204,102,255,.07);}
-.btn.purple:hover{background:var(--purple);color:#000;}
-.btn.orange{border-color:var(--orange);color:var(--orange);background:rgba(255,136,51,.07);}
-.btn.orange:hover{background:var(--orange);color:#000;}
-.btn.green{border-color:var(--green);color:var(--green);background:rgba(68,255,170,.07);}
-.btn.green:hover{background:var(--green);color:#000;}
-
-/* SCREENS */
-.screen{display:none;width:100%;flex-direction:column;height:100dvh;overflow:hidden;}
-.screen.active{display:flex;animation:fadeIn .3s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
-.header{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:rgba(0,0,0,.72);border-bottom:1px solid var(--border);flex-shrink:0;font-size:11px;gap:6px;}
-.gold-txt{color:var(--gold);font-weight:900;}
-.save-badge{background:rgba(0,255,100,.12);border:1px solid #00ff88;color:#00ff88;padding:2px 7px;border-radius:10px;font-size:10px;white-space:nowrap;}
-.scrollable{overflow-y:auto;-webkit-overflow-scrolling:touch;}
-
-/* START */
-#screen-start{align-items:center;justify-content:center;gap:12px;}
-.title-main{font-family:'Orbitron',sans-serif;font-size:clamp(28px,8vw,58px);font-weight:900;background:linear-gradient(135deg,var(--cyan),var(--purple),var(--magenta));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:clamp(3px,2vw,10px);animation:titlePulse 4s infinite;text-align:center;}
-@keyframes titlePulse{0%,100%{filter:drop-shadow(0 0 16px rgba(0,232,255,.5))}50%{filter:drop-shadow(0 0 32px rgba(204,102,255,.7))}}
-.save-notice{color:#44ffaa;font-size:12px;background:rgba(0,255,100,.1);border:1px solid rgba(0,255,100,.3);padding:5px 16px;border-radius:18px;text-align:center;}
-
-/* ── ACCOUNT SECTION ── */
-.account-section{
-  background:rgba(8,12,28,.85);border:1px solid rgba(0,232,255,.18);
-  border-radius:14px;padding:14px 18px;min-width:280px;max-width:360px;
-  display:flex;flex-direction:column;gap:10px;
-}
-.account-title{font-family:'Orbitron',sans-serif;font-size:9px;color:#334;letter-spacing:3px;text-align:center;margin-bottom:2px;}
-.account-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(0,232,255,.2),transparent);}
-.provider-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
-.provider-btn{
-  display:flex;align-items:center;gap:6px;
-  padding:7px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;
-  border:1.5px solid;transition:.2s;
-}
-.provider-btn.google{border-color:#4285f4;color:#4285f4;background:rgba(66,133,244,.08);}
-.provider-btn.google:hover{background:#4285f4;color:#fff;box-shadow:0 0 12px rgba(66,133,244,.5);}
-.provider-btn.discord{border-color:#5865f2;color:#5865f2;background:rgba(88,101,242,.08);}
-.provider-btn.discord:hover{background:#5865f2;color:#fff;box-shadow:0 0 12px rgba(88,101,242,.5);}
-.provider-btn.apple{border-color:#f2f2f7;color:#f2f2f7;background:rgba(242,242,247,.06);}
-.provider-btn.apple:hover{background:#f2f2f7;color:#000;box-shadow:0 0 12px rgba(255,255,255,.3);}
-.provider-btn .pi{font-size:14px;}
-.provider-badge{font-size:8px;padding:1px 5px;border-radius:5px;background:rgba(255,136,51,.15);border:1px solid var(--orange);color:var(--orange);margin-left:2px;font-weight:700;}
-.account-loggedin{display:flex;align-items:center;gap:10px;padding:4px 0;}
-.account-avatar{width:32px;height:32px;border-radius:50%;border:2px solid var(--cyan);object-fit:cover;}
-.account-avatar-placeholder{width:32px;height:32px;border-radius:50%;border:2px solid var(--cyan);display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(0,232,255,.1);}
-.account-info{flex:1;}
-.account-name{font-size:12px;font-weight:700;color:var(--cyan);}
-.account-sub{font-size:9px;color:#445;}
-.account-sync-badge{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:700;}
-.sync-cloud{background:rgba(0,255,100,.1);border:1px solid #00ff88;color:#00ff88;}
-.sync-local{background:rgba(255,100,0,.1);border:1px solid var(--orange);color:var(--orange);}
-/* Migration banner */
-.migrate-banner{
-  background:linear-gradient(90deg,rgba(255,216,77,.1),rgba(204,102,255,.1));
-  border:1px solid rgba(255,216,77,.3);border-radius:8px;padding:8px 10px;font-size:10px;
-}
-.migrate-title{color:var(--gold);font-weight:700;margin-bottom:4px;}
-.migrate-desc{color:#889;font-size:9px;margin-bottom:6px;line-height:1.4;}
-.migrate-btns{display:flex;gap:6px;}
-
-/* CHAR SELECT */
-#screen-charselect{overflow:hidden;}
-.char-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:0 12px;overflow-y:auto;flex:1;}
-.char-card{background:rgba(8,12,28,.9);border:2px solid #1a2040;border-radius:11px;padding:9px 7px;cursor:pointer;transition:.2s;text-align:center;position:relative;overflow:hidden;}
-.char-card:hover,.char-card:active{border-color:rgba(0,232,255,.6);transform:translateY(-2px);box-shadow:0 0 18px rgba(0,232,255,.2);}
-.char-card.selected{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,232,255,.3);}
-.char-card.selected .sel-badge{display:block;}
-.sel-badge{display:none;position:absolute;top:5px;right:5px;background:var(--cyan);color:#000;font-size:9px;font-weight:900;padding:2px 5px;border-radius:7px;}
-.char-class-tag{font-size:9px;font-weight:700;letter-spacing:2px;margin-bottom:2px;opacity:.7;}
-.char-name-big{font-size:14px;font-weight:900;margin-bottom:2px;}
-.char-flavor{font-size:9px;color:#667;margin-bottom:4px;line-height:1.3;}
-.stat-row{display:flex;justify-content:space-between;font-size:9px;color:#445;padding:1px 0;}
-.stat-val{color:#aaa;}
-
-/* HUB */
-#screen-hub{overflow:hidden;}
-.hub-tabs{display:flex;gap:2px;padding:6px 12px 0;flex-shrink:0;}
-.hub-tab{flex:1;padding:6px 4px;background:rgba(0,0,0,.4);border:1px solid #1a2040;border-bottom:none;border-radius:6px 6px 0 0;font-size:10px;font-weight:700;color:#446;cursor:pointer;text-align:center;transition:.15s;}
-.hub-tab.active{background:var(--panel);border-color:var(--border);color:var(--cyan);}
-.hub-tab-body{display:none;flex:1;overflow-y:auto;padding:10px 12px;}
-.hub-tab-body.active{display:flex;flex-direction:column;gap:8px;}
-.hub-panel{background:var(--panel);border:1px solid var(--border);border-radius:9px;padding:12px;}
-.hub-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:11px;}
-.stat-box{background:rgba(0,0,0,.4);border:1px solid #1a2040;border-radius:5px;padding:4px 7px;text-align:center;}
-.stat-box .s-label{color:#445;font-size:9px;margin-bottom:1px;}
-.stat-box .s-val{font-size:16px;font-weight:900;}
-.shop-item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #0c1020;padding:7px 0;gap:6px;}
-.shop-item-desc{font-size:10px;color:#667;margin-top:1px;}
-.shop-lv-tag{font-size:10px;color:var(--cyan);background:rgba(0,232,255,.1);padding:1px 5px;border-radius:5px;margin-left:4px;}
-
-/* EQUIPMENT */
-.equip-slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;}
-.equip-slot{background:rgba(0,0,0,.5);border:1.5px dashed #1a2040;border-radius:8px;padding:8px;text-align:center;cursor:pointer;transition:.15px;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;}
-.equip-slot:hover{border-color:var(--cyan);background:rgba(0,232,255,.05);}
-.equip-slot.has-item{border-style:solid;}
-.equip-slot .slot-icon{font-size:20px;}
-.equip-slot .slot-name{font-size:9px;font-weight:700;color:#667;}
-.equip-slot .item-name{font-size:10px;font-weight:900;}
-.equip-slot .item-stat{font-size:9px;opacity:.7;}
-.rarity-common{color:#aaa;}
-.rarity-rare{color:#4499ff;}
-.rarity-epic{color:var(--purple);}
-.rarity-legend{color:var(--gold);}
-.inventory-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;}
-.inv-item{background:rgba(0,0,0,.5);border:1px solid #1a2040;border-radius:7px;padding:7px 5px;text-align:center;cursor:pointer;transition:.15s;position:relative;}
-.inv-item:hover{border-color:var(--cyan);background:rgba(0,232,255,.05);}
-.inv-item.equipped{border-color:var(--gold);background:rgba(255,216,77,.06);}
-.inv-item .inv-icon{font-size:18px;}
-.inv-item .inv-name{font-size:9px;font-weight:700;margin-top:2px;}
-.inv-item .inv-stats{font-size:8px;opacity:.6;margin-top:1px;}
-
-/* SKILL UPGRADES */
-.skill-upgrade-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #0c1020;padding:7px 0;gap:6px;}
-.skill-lv-bar{display:flex;gap:3px;margin-top:3px;}
-.skill-lv-pip{width:10px;height:6px;border-radius:2px;background:#1a2040;}
-.skill-lv-pip.filled{background:var(--cyan);}
-
-/* ACHIEVEMENTS */
-.achieve-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
-.achieve-card{background:rgba(0,0,0,.5);border:1px solid #1a2040;border-radius:8px;padding:8px;display:flex;gap:8px;align-items:center;transition:.2s;}
-.achieve-card.unlocked{border-color:var(--gold);background:rgba(255,216,77,.05);}
-.achieve-icon{font-size:22px;flex-shrink:0;}
-.achieve-name{font-size:11px;font-weight:900;margin-bottom:2px;}
-.achieve-desc{font-size:9px;color:#556;}
-.achieve-prog{font-size:9px;color:var(--gold);}
-.prog-bar{width:100%;height:4px;background:#0c1020;border-radius:2px;margin-top:3px;overflow:hidden;}
-.prog-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--purple));transition:width .5s;}
-
-/* MAP */
-#screen-map{overflow:hidden;}
-.map-body{flex:1;overflow-y:auto;padding:8px 12px;}
-.zone-block{margin-bottom:14px;border-radius:9px;overflow:hidden;border:1px solid rgba(255,255,255,.05);}
-.zone-header{padding:7px 12px;font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:2px;font-weight:900;display:flex;align-items:center;gap:7px;}
-.zone-stages{display:flex;align-items:center;padding:10px 12px;gap:5px;overflow-x:auto;}
-.stage-node{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0;cursor:pointer;}
-.stage-circle{width:42px;height:42px;border-radius:50%;border:2px solid;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:900;transition:.2s;position:relative;}
-.stage-circle.boss{border-radius:7px;transform:rotate(45deg);width:38px;height:38px;}
-.stage-circle.boss .sn{transform:rotate(-45deg);display:block;}
-.stage-circle:hover{transform:scale(1.12);}
-.stage-circle.boss:hover{transform:rotate(45deg) scale(1.12);}
-.stage-circle.current{animation:stagePulse 1.5s infinite;}
-@keyframes stagePulse{0%,100%{box-shadow:0 0 0 0 rgba(0,232,255,.6)}50%{box-shadow:0 0 0 6px rgba(0,232,255,0)}}
-.stage-circle.locked{opacity:.2;cursor:not-allowed;}
-.stage-circle.locked:hover{transform:none;}
-.stage-circle.boss.locked:hover{transform:rotate(45deg);}
-.stage-line{width:18px;height:2px;flex-shrink:0;border-radius:2px;}
-.stage-label{font-size:8px;font-weight:700;opacity:.7;text-align:center;max-width:46px;line-height:1.3;}
-.stage-clears{font-size:8px;color:#556;text-align:center;}
-.challenge-badge{position:absolute;top:-4px;right:-4px;background:var(--orange);color:#000;font-size:7px;font-weight:900;padding:1px 4px;border-radius:5px;font-family:'Orbitron',sans-serif;}
-
-/* BATTLE */
-#screen-battle{overflow:hidden;}
-.battle-scene{display:flex;justify-content:space-around;align-items:center;flex:1;gap:6px;padding:0 8px;min-height:0;}
-.battle-card{flex:1;max-width:275px;background:var(--panel);border:2px solid var(--border);border-radius:11px;padding:10px;position:relative;transition:.25s;min-width:0;}
-#player-card{border-color:rgba(0,232,255,.45);}
-#enemy-card{border-color:rgba(255,51,153,.45);}
-.card-sprite-area{height:clamp(70px,12vw,120px);display:flex;align-items:center;justify-content:center;margin-bottom:5px;}
-canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
-.card-name{font-size:clamp(12px,2.5vw,15px);font-weight:900;letter-spacing:.8px;margin-bottom:4px;}
-.efx-row{display:flex;gap:3px;flex-wrap:wrap;min-height:16px;margin-bottom:3px;}
-.efx{font-size:8px;font-weight:700;padding:1px 5px;border-radius:7px;}
-.efx-buff{background:rgba(0,255,100,.12);border:1px solid #00ff88;color:#00ff88;}
-.efx-debuff{background:rgba(255,51,153,.12);border:1px solid var(--magenta);color:var(--magenta);}
-.bar-label{font-size:9px;color:#445;margin-bottom:1px;}
-.bar-track{width:100%;height:7px;background:#060a12;border-radius:4px;overflow:hidden;margin-bottom:4px;}
-.bar-fill{height:100%;border-radius:4px;transition:width .4s cubic-bezier(.4,0,.2,1);}
-.hp-fill{background:linear-gradient(90deg,#00cc55,#44ffaa);}
-.ep-fill{background:linear-gradient(90deg,#0088dd,var(--cyan));}
-.enemy-fill{background:linear-gradient(90deg,#cc0044,var(--magenta));}
-.vs-gfx{font-family:'Orbitron',sans-serif;font-size:clamp(16px,3vw,26px);font-weight:900;color:#1a2040;flex-shrink:0;}
-.boss-warning{color:var(--magenta);font-size:10px;animation:bwarn 1s infinite alternate;font-family:'Orbitron',sans-serif;}
-@keyframes bwarn{from{opacity:.6}to{opacity:1}}
-.combo-display{position:absolute;top:6px;right:8px;font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(12px,2.5vw,18px);color:var(--gold);text-shadow:0 0 10px var(--gold);transition:.2s;opacity:0;}
-.combo-display.show{opacity:1;}
-.challenge-banner{background:linear-gradient(90deg,rgba(255,136,51,.15),transparent);border-left:3px solid var(--orange);padding:4px 10px;font-size:10px;color:var(--orange);font-weight:700;flex-shrink:0;display:none;}
-.challenge-banner.show{display:block;}
-.battle-bottom{display:grid;grid-template-columns:2fr 1fr;gap:8px;height:clamp(130px,21vh,185px);margin:6px 8px 5px;flex-shrink:0;}
-.cmd-panel{background:rgba(3,6,16,.92);border:1px solid var(--border);border-radius:9px;padding:7px;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start;overflow-y:auto;}
-.log-panel{background:rgba(2,3,10,.96);border:1px solid #0e1425;border-radius:9px;padding:7px;overflow-y:auto;font-size:10.5px;color:#556;line-height:1.55;}
-.log-line{padding:.5px 0;}
-.skill-btn{font-size:10px!important;padding:5px 8px!important;border-radius:5px!important;flex:1 1 44%;min-height:34px;line-height:1.2;}
-.skill-ult{border-color:var(--gold)!important;color:var(--gold)!important;background:rgba(255,216,77,.08)!important;}
-/* Ultimate USED state */
-.skill-ult.ult-used{border-color:#444!important;color:#555!important;background:rgba(0,0,0,.2)!important;cursor:not-allowed!important;position:relative;overflow:hidden;}
-.skill-ult.ult-used::after{content:'USED';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:9px;font-weight:900;color:#666;letter-spacing:2px;}
-
-.b-equip-row{display:flex;gap:4px;margin-bottom:4px;flex-wrap:wrap;}
-.b-equip-tag{font-size:8px;padding:1px 5px;border-radius:5px;background:rgba(255,216,77,.1);border:1px solid rgba(255,216,77,.3);color:var(--gold);}
-
-/* ITEM DROP POPUP */
-.item-drop-overlay{position:fixed;inset:0;z-index:9990;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);animation:fadeIn .3s;}
-.item-drop-box{background:var(--panel);border:2px solid var(--gold);border-radius:14px;padding:24px;text-align:center;min-width:240px;animation:dropPop .4s cubic-bezier(.1,.8,.2,1);}
-@keyframes dropPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
-.item-drop-icon{font-size:48px;margin-bottom:8px;}
-.item-drop-name{font-size:18px;font-weight:900;margin-bottom:4px;}
-.item-drop-stats{font-size:12px;color:#889;margin-bottom:16px;}
-
-/* ANIMATIONS */
-.dmg-pop{position:absolute;font-size:clamp(18px,3.5vw,26px);font-weight:900;pointer-events:none;z-index:300;animation:floatUp .8s forwards;font-family:'Orbitron',sans-serif;}
-@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1.1)}60%{opacity:1;transform:translateY(-26px) scale(1.15)}100%{opacity:0;transform:translateY(-48px) scale(.9)}}
-.hit-anim{animation:hitShake .25s;}
-@keyframes hitShake{0%,100%{transform:none}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-.aura-active{filter:drop-shadow(0 0 8px rgba(204,102,255,.8)) drop-shadow(0 0 14px rgba(204,102,255,.45));}
-
-/* CUTSCENE */
-#cutscene-layer{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);align-items:center;justify-content:center;flex-direction:column;overflow:hidden;}
-.cs-bg-flash{position:absolute;inset:0;opacity:0;animation:csFlash 1.5s forwards;}
-@keyframes csFlash{0%{opacity:0}12%{opacity:1}50%{opacity:.25}100%{opacity:0}}
-.cs-char-canvas{width:220px;height:220px;image-rendering:pixelated;transform:scale(2.5) translateX(-60vw);opacity:0;position:relative;z-index:2;}
-.cs-title{font-family:'Orbitron',sans-serif;font-size:clamp(18px,4.5vw,40px);font-weight:900;letter-spacing:clamp(3px,1.5vw,9px);margin-top:12px;opacity:0;text-align:center;text-shadow:0 0 28px currentColor;position:relative;z-index:2;}
-.cs-lines-container{position:absolute;bottom:28%;left:50%;transform:translateX(-50%);font-family:'Orbitron',sans-serif;font-size:clamp(12px,2.8vw,20px);font-weight:900;text-align:center;letter-spacing:2px;opacity:0;transition:opacity .18s;z-index:3;}
-.cs-anim-char{animation:slideInChar 1.5s cubic-bezier(.1,.8,.2,1) forwards;}
-.cs-anim-text{animation:popText 1.5s cubic-bezier(.1,.8,.2,1) forwards;}
-@keyframes slideInChar{0%{transform:scale(2.5) translateX(-60vw);opacity:0}15%{transform:scale(3) translateX(0);opacity:1}80%{transform:scale(3) translateX(2vw);opacity:1}100%{transform:scale(2) translateX(60vw);opacity:0}}
-@keyframes popText{0%{transform:scale(0);opacity:0}15%{transform:scale(1.1);opacity:1}80%{transform:scale(1);opacity:1}100%{transform:scale(1.4);opacity:0}}
-
-/* CONFIRM MODAL */
-.confirm-overlay{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.82);animation:fadeIn .2s;}
-.confirm-box{background:var(--panel);border:2px solid var(--magenta);border-radius:14px;padding:22px 24px;text-align:center;min-width:260px;max-width:340px;animation:dropPop .3s cubic-bezier(.1,.8,.2,1);}
-.confirm-icon{font-size:36px;margin-bottom:8px;}
-.confirm-title{font-size:15px;font-weight:900;margin-bottom:6px;color:var(--magenta);}
-.confirm-body{font-size:12px;color:#889;margin-bottom:16px;line-height:1.5;}
-.confirm-btns{display:flex;gap:10px;justify-content:center;}
-
-/* TOAST */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(0,6,20,.97);border:1.5px solid var(--cyan);color:var(--cyan);padding:9px 20px;border-radius:18px;font-size:12px;z-index:10000;font-weight:700;pointer-events:none;animation:toastFade 2.6s forwards;white-space:nowrap;}
-@keyframes toastFade{0%{opacity:0;transform:translateX(-50%) translateY(8px)}10%{opacity:1;transform:translateX(-50%) translateY(0)}80%{opacity:1}100%{opacity:0}}
-
-/* RESPONSIVE */
-@media(max-width:600px){
-  .char-grid{grid-template-columns:repeat(2,1fr);}
-  .hub-tab{font-size:9px;padding:5px 2px;}
-  .battle-scene{flex-direction:column;padding:2px 5px;gap:4px;}
-  .battle-card{max-width:100%;padding:7px;}
-  .vs-gfx{display:none;}
-  .battle-bottom{grid-template-columns:1fr;height:auto;max-height:175px;}
-  .cmd-panel{max-height:105px;}
-  .log-panel{height:85px;}
-  .equip-slots{grid-template-columns:repeat(3,1fr);}
-  .achieve-grid{grid-template-columns:1fr;}
-  .inventory-grid{grid-template-columns:repeat(3,1fr);}
-  .account-section{min-width:unset;width:90%;}
-  .provider-btns{gap:5px;}
-  .provider-btn{padding:6px 10px;font-size:10px;}
-}
-@media(max-height:480px) and (orientation:landscape){
-  .battle-scene{flex-direction:row;}
-  .battle-card{max-width:210px;}
-  .card-sprite-area{height:65px;}
-  .battle-bottom{height:120px;}
-}
-@media(min-width:601px) and (max-width:900px){
-  .char-grid{grid-template-columns:repeat(3,1fr);}
-}
-</style>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
 
-<!-- CUTSCENE -->
 <div id="cutscene-layer">
   <div id="cs-bg-flash" class="cs-bg-flash"></div>
   <canvas id="cs-canvas" class="cs-char-canvas" width="128" height="128"></canvas>
@@ -311,1460 +23,245 @@ canvas{image-rendering:pixelated;image-rendering:crisp-edges;}
 </div>
 
 <div class="wrap">
+  <div id="screen-start" class="screen active">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;padding:20px;">
+      <div class="title-main">VOID TACTICS</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#334;letter-spacing:5px;text-align:center;">ULTIMATE ANIME EDITION v7.0</div>
 
-<!-- START -->
-<div id="screen-start" class="screen active">
-  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;padding:20px;">
-    <div class="title-main">VOID TACTICS</div>
-    <div style="font-family:'Orbitron',sans-serif;font-size:10px;color:#334;letter-spacing:5px;text-align:center;">ULTIMATE ANIME EDITION v7.0</div>
+      <div class="account-section" id="account-section">
+        <div class="account-title">◆ AGENT ACCOUNT ◆</div>
 
-    <!-- ACCOUNT SECTION -->
-    <div class="account-section" id="account-section">
-      <div class="account-title">◆ AGENT ACCOUNT ◆</div>
-
-      <!-- Guest UI (before login) -->
-      <div id="account-guest-ui">
-        <div style="font-size:10px;color:#445;text-align:center;margin-bottom:8px;">アカウント連携でデータをクラウド保存・復元</div>
-        <div class="provider-btns">
-          <div class="provider-btn google" onclick="signInWithGoogle()">
-            <span class="pi">🌐</span> Google
+        <div id="account-guest-ui">
+          <div style="font-size:10px;color:#445;text-align:center;margin-bottom:8px;">アカウント連携でデータをクラウド保存・復元</div>
+          <div class="provider-btns">
+            <div class="provider-btn google" onclick="signInWithGoogle()"><span class="pi">🌐</span> Google</div>
+            <div class="provider-btn discord" onclick="signInWithDiscord()"><span class="pi">🎮</span> Discord</div>
+            <div class="provider-btn apple" onclick="signInWithApple()"><span class="pi">🍎</span> Apple</div>
           </div>
-          <div class="provider-btn discord" onclick="signInWithDiscord()">
-            <span class="pi">🎮</span> Discord
+          <div id="auth-loading" style="display:none;text-align:center;font-size:10px;color:var(--cyan);padding:4px 0;">⟳ 接続中...</div>
+          <div id="firebase-notice" style="display:none;font-size:9px;color:#334;text-align:center;padding:2px 0;"></div>
+        </div>
+
+        <div id="account-loggedin-ui" style="display:none;">
+          <div class="account-loggedin">
+            <div id="account-avatar-wrap"><div class="account-avatar-placeholder">👤</div></div>
+            <div class="account-info">
+              <div class="account-name" id="account-name-txt">---</div>
+              <div class="account-sub" id="account-sub-txt">---</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <div class="account-sync-badge" id="sync-badge">✓ CLOUD</div>
+              <button class="btn back" style="font-size:9px;padding:3px 8px;" onclick="signOutAccount()">ログアウト</button>
+            </div>
           </div>
-          <div class="provider-btn apple" onclick="signInWithApple()">
-            <span class="pi">🍎</span> Apple
+          <div id="migrate-banner" class="migrate-banner" style="display:none;">
+            <div class="migrate-title">📁 ローカルデータを検出</div>
+            <div class="migrate-desc">未連携のセーブデータがあります。<br>アカウントに移行しますか？</div>
+            <div class="migrate-btns">
+              <button class="btn sm gold" onclick="migrateLocalToCloud()">移行する</button>
+              <button class="btn sm back" onclick="dismissMigrate()">後で</button>
+            </div>
           </div>
         </div>
-        <div id="auth-loading" style="display:none;text-align:center;font-size:10px;color:var(--cyan);padding:4px 0;">
-          ⟳ 接続中...
-        </div>
-        <div id="firebase-notice" style="display:none;font-size:9px;color:#334;text-align:center;padding:2px 0;"></div>
       </div>
+      <div class="account-divider"></div>
+      <div id="start-save-info" style="display:none;" class="save-notice">📁 セーブデータを検出しました</div>
+      <div id="start-btns" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+        <button class="btn big" onclick="newGameConfirm()">NEW GAME</button>
+        <button class="btn big gold" id="continue-btn" onclick="continueGame()" style="display:none;">CONTINUE ▶</button>
+      </div>
+      <button class="btn back" id="delete-btn" onclick="deleteSave()" style="display:none;opacity:.4;font-size:10px;">セーブ削除</button>
+    </div>
+  </div>
 
-      <!-- Logged-in UI -->
-      <div id="account-loggedin-ui" style="display:none;">
-        <div class="account-loggedin">
-          <div id="account-avatar-wrap">
-            <div class="account-avatar-placeholder">👤</div>
+  <div id="screen-charselect" class="screen">
+    <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;flex-shrink:0;">
+      <button class="btn back" onclick="switchScreen('start')">◀ TITLE</button>
+      <div style="flex:1;text-align:center;">
+        <div style="font-family:'Orbitron',sans-serif;font-size:15px;color:var(--cyan);letter-spacing:2px;">SELECT AGENT</div>
+        <div style="font-size:9px;color:#445;margin-top:1px;">キャラごとに強化・装備データが独立保存</div>
+      </div>
+    </div>
+    <div class="char-grid" id="char-grid"></div>
+    <div style="padding:10px 12px;text-align:center;flex-shrink:0;">
+      <button class="btn big gold" onclick="confirmCharSelect()">DEPLOY ▶▶</button>
+    </div>
+  </div>
+
+  <div id="screen-hub" class="screen">
+    <div class="header">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <button class="btn back" onclick="switchScreen('charselect')">◀ キャラ変更</button>
+        <span style="font-family:'Orbitron',sans-serif;font-size:10px;color:#334;">BASE CAMP</span>
+        <span class="save-badge" id="save-status">💾 SAVED</span>
+      </div>
+      <div class="gold-txt" style="font-size:11px;">🪙<span id="ui-coin">0</span> 💎<span id="ui-core">0</span> 🔮<span id="ui-dust">0</span></div>
+    </div>
+    <div class="hub-tabs">
+      <div class="hub-tab active" onclick="switchHubTab('status')" id="tab-status">ステータス</div>
+      <div class="hub-tab" onclick="switchHubTab('shop')" id="tab-shop">強化</div>
+      <div class="hub-tab" onclick="switchHubTab('equip')" id="tab-equip">装備</div>
+      <div class="hub-tab" onclick="switchHubTab('skills')" id="tab-skills">スキル</div>
+      <div class="hub-tab" onclick="switchHubTab('achieve')" id="tab-achieve">実績</div>
+    </div>
+
+    <div class="hub-tab-body active" id="tab-body-status">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="hub-panel" style="flex:0 0 auto;min-width:180px;display:flex;flex-direction:column;align-items:center;gap:7px;">
+          <div id="hub-sprite-wrap" style="height:100px;display:flex;align-items:center;justify-content:center;"></div>
+          <div id="hub-cname" style="font-size:18px;font-weight:900;color:var(--cyan);text-align:center;"></div>
+          <div id="hub-ctitle" style="font-size:10px;color:#445;text-align:center;"></div>
+          <div id="hub-rank-badge" style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;"></div>
+        </div>
+        <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px;">
+          <div class="hub-panel">
+            <div style="font-size:10px;color:#445;margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:1px;">COMBAT STATS</div>
+            <div class="hub-stat-grid">
+              <div class="stat-box"><div class="s-label">MAX HP</div><div class="s-val" id="hub-hp" style="color:var(--green);">-</div></div>
+              <div class="stat-box"><div class="s-label">MAX EP</div><div class="s-val" id="hub-ep" style="color:var(--cyan);">-</div></div>
+              <div class="stat-box"><div class="s-label">BASE ATK</div><div class="s-val" id="hub-atk" style="color:var(--magenta);">-</div></div>
+              <div class="stat-box"><div class="s-label">DEF</div><div class="s-val" id="hub-def" style="color:#88aacc;">-</div></div>
+            </div>
           </div>
-          <div class="account-info">
-            <div class="account-name" id="account-name-txt">---</div>
-            <div class="account-sub" id="account-sub-txt">---</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <div class="account-sync-badge" id="sync-badge">✓ CLOUD</div>
-            <button class="btn back" style="font-size:9px;padding:3px 8px;" onclick="signOutAccount()">ログアウト</button>
+          <div class="hub-panel" id="hub-equip-preview" style="font-size:11px;">
+            <div style="font-size:10px;color:#445;margin-bottom:5px;font-family:'Orbitron',sans-serif;letter-spacing:1px;">EQUIPPED GEAR</div>
+            <div id="hub-gear-summary"></div>
           </div>
         </div>
-        <!-- Migration banner (shown when local save exists) -->
-        <div id="migrate-banner" class="migrate-banner" style="display:none;">
-          <div class="migrate-title">📁 ローカルデータを検出</div>
-          <div class="migrate-desc">未連携のセーブデータがあります。<br>アカウントに移行しますか？</div>
-          <div class="migrate-btns">
-            <button class="btn sm gold" onclick="migrateLocalToCloud()">移行する</button>
-            <button class="btn sm back" onclick="dismissMigrate()">後で</button>
-          </div>
+      </div>
+      <div class="hub-panel">
+        <div style="font-size:10px;color:#445;margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:1px;">PROGRESS</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;">
+          <div style="text-align:center;"><div style="color:#556;font-size:9px;">最高ステージ</div><div style="font-size:17px;font-weight:900;color:var(--gold);" id="hub-maxlv">-</div></div>
+          <div style="text-align:center;"><div style="color:#556;font-size:9px;">総撃破数</div><div style="font-size:17px;font-weight:900;color:var(--magenta);" id="hub-kills">-</div></div>
+          <div style="text-align:center;"><div style="color:#556;font-size:9px;">獲得コイン</div><div style="font-size:17px;font-weight:900;color:var(--gold);" id="hub-totalcoin">-</div></div>
+        </div>
+      </div>
+      <div style="text-align:center;padding-bottom:4px;">
+        <button class="btn big" style="font-size:14px;width:100%;" onclick="switchScreen('map')">🗺 STAGE MAP ▶</button>
+      </div>
+    </div>
+
+    <div class="hub-tab-body" id="tab-body-shop">
+      <div class="hub-panel">
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--gold);margin-bottom:8px;letter-spacing:2px;">◆ BLACK MARKET</div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">MAX HP <span class="shop-lv-tag" id="shop-lv-hp">Lv.0</span></div><div class="shop-item-desc">耐久力UP (+20 per lv)</div></div>
+          <button class="btn sm" id="btn-buy-hp" onclick="buyUpgrade('hp')">🪙 <span id="cost-hp">50</span></button>
+        </div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">MAX EP <span class="shop-lv-tag" id="shop-lv-ep">Lv.0</span></div><div class="shop-item-desc">スキル回数UP (+10 per lv)</div></div>
+          <button class="btn sm" id="btn-buy-ep" onclick="buyUpgrade('ep')">🪙 <span id="cost-ep">50</span></button>
+        </div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">BASE ATK <span class="shop-lv-tag" id="shop-lv-atk">Lv.0</span></div><div class="shop-item-desc">攻撃力UP (+5 per lv)</div></div>
+          <button class="btn sm" id="btn-buy-atk" onclick="buyUpgrade('atk')">🪙 <span id="cost-atk">100</span></button>
+        </div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">BASE DEF <span class="shop-lv-tag" id="shop-lv-def">Lv.0</span></div><div class="shop-item-desc">防御力UP (ダメージ軽減)</div></div>
+          <button class="btn sm" id="btn-buy-def" onclick="buyUpgrade('def')">🪙 <span id="cost-def">80</span></button>
+        </div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;color:var(--purple);">VOID AWAKENING</div><div class="shop-item-desc">全ステータス+15% (1回のみ)</div></div>
+          <button class="btn sm purple" id="btn-buy-awk" onclick="buyVoidAwaken()">💎 3</button>
+        </div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;color:var(--magenta);">SECOND AWAKENING</div><div class="shop-item-desc">全ステータス+20% ★覚醒後のみ</div></div>
+          <button class="btn sm magenta" id="btn-buy-awk2" onclick="buyVoidAwaken2()">💎 8</button>
+        </div>
+      </div>
+      <div class="hub-panel">
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--orange);margin-bottom:8px;letter-spacing:2px;">◆ DUST FORGE</div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;">ランダム装備召喚</div><div class="shop-item-desc">ダストを消費してランダム装備を獲得</div></div>
+          <button class="btn sm orange" onclick="forgeItem()">🔮 <span id="forge-cost">3</span></button>
+        </div>
+        <div class="shop-item">
+          <div><div style="font-weight:700;font-size:12px;">装備分解</div><div class="shop-item-desc">インベントリの装備→ダスト変換</div></div>
+          <button class="btn sm" onclick="switchHubTab('equip')">装備タブへ →</button>
         </div>
       </div>
     </div>
 
-    <div class="account-divider"></div>
-
-    <div id="start-save-info" style="display:none;" class="save-notice">📁 セーブデータを検出しました</div>
-    <div id="start-btns" style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
-      <button class="btn big" onclick="newGameConfirm()">NEW GAME</button>
-      <button class="btn big gold" id="continue-btn" onclick="continueGame()" style="display:none;">CONTINUE ▶</button>
+    <div class="hub-tab-body" id="tab-body-equip">
+      <div class="hub-panel">
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:8px;letter-spacing:1px;">◆ EQUIPPED</div>
+        <div class="equip-slots" id="equip-slots"></div>
+      </div>
+      <div class="hub-panel">
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--gold);margin-bottom:6px;letter-spacing:1px;">◆ INVENTORY <span id="inv-count" style="font-size:10px;color:#445;"></span></div>
+        <div class="inventory-grid" id="inventory-grid"></div>
+        <div id="inv-empty" style="color:#334;font-size:11px;text-align:center;padding:20px 0;display:none;">装備アイテムなし<br><span style="font-size:9px;color:#223;">ステージをクリアしてドロップを集めよう！</span></div>
+      </div>
     </div>
-    <button class="btn back" id="delete-btn" onclick="deleteSave()" style="display:none;opacity:.4;font-size:10px;">セーブ削除</button>
+
+    <div class="hub-tab-body" id="tab-body-skills">
+      <div class="hub-panel">
+        <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:8px;letter-spacing:1px;">◆ SKILL FORGE</div>
+        <div id="skill-upgrade-list"></div>
+      </div>
+    </div>
+
+    <div class="hub-tab-body" id="tab-body-achieve">
+      <div class="achieve-grid" id="achieve-grid"></div>
+    </div>
+  </div>
+
+  <div id="screen-map" class="screen">
+    <div class="header">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <button class="btn back" onclick="switchScreen('hub')">◀ BASE</button>
+        <span style="font-family:'Orbitron',sans-serif;font-size:10px;color:var(--cyan);">STAGE MAP</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="font-size:10px;color:#556;">チャレンジ: <span style="color:var(--orange);">+50% 報酬</span></div>
+        <div class="gold-txt" style="font-size:11px;">🪙<span id="map-coin">0</span></div>
+      </div>
+    </div>
+    <div class="map-body" id="map-body"></div>
+  </div>
+
+  <div id="screen-battle" class="screen">
+    <div class="header">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <button class="btn back sm" onclick="retreatBattle()">◀ 撤退</button>
+        <div id="stage-name-txt" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div id="combo-display" class="combo-display"></div>
+        <div class="gold-txt" style="font-size:11px;">🪙<span id="battle-coin">0</span></div>
+      </div>
+    </div>
+    <div id="challenge-banner" class="challenge-banner">⚠ チャレンジモード: 敵強化中 | 報酬+50%</div>
+    <div class="battle-scene">
+      <div id="player-card" class="battle-card">
+        <div class="card-name" id="b-pname" style="color:var(--cyan);"></div>
+        <div class="card-sprite-area"><canvas id="player-sprite" width="128" height="128" style="width:clamp(72px,12vw,112px);height:clamp(72px,12vw,112px);"></canvas></div>
+        <div class="b-equip-row" id="b-equip-tags"></div>
+        <div class="efx-row" id="player-efx"></div>
+        <div class="bar-label">HP <span id="p-hp-txt" style="color:var(--green);font-weight:700;"></span>/<span id="p-maxhp"></span></div>
+        <div class="bar-track"><div id="p-hp-bar" class="bar-fill hp-fill" style="width:100%"></div></div>
+        <div class="bar-label">EP <span id="p-ep-txt" style="color:var(--cyan);font-weight:700;"></span>/<span id="p-maxep"></span></div>
+        <div class="bar-track"><div id="p-ep-bar" class="bar-fill ep-fill" style="width:100%"></div></div>
+      </div>
+      <div class="vs-gfx" id="vs-label">VS</div>
+      <div id="enemy-card" class="battle-card">
+        <div class="card-name" id="b-ename" style="color:var(--magenta);"></div>
+        <div class="card-sprite-area"><canvas id="enemy-sprite" width="128" height="128" style="width:clamp(72px,12vw,112px);height:clamp(72px,12vw,112px);"></canvas></div>
+        <div class="efx-row" id="enemy-efx"></div>
+        <div class="bar-label">HP <span id="e-hp-txt" style="color:var(--magenta);font-weight:700;"></span>/<span id="e-maxhp"></span></div>
+        <div class="bar-track"><div id="e-hp-bar" class="bar-fill enemy-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+    <div class="battle-bottom">
+      <div class="cmd-panel" id="cmd-panel"></div>
+      <div class="log-panel" id="log-panel"></div>
+    </div>
   </div>
 </div>
 
-<!-- CHAR SELECT -->
-<div id="screen-charselect" class="screen">
-  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;flex-shrink:0;">
-    <button class="btn back" onclick="switchScreen('start')">◀ TITLE</button>
-    <div style="flex:1;text-align:center;">
-      <div style="font-family:'Orbitron',sans-serif;font-size:15px;color:var(--cyan);letter-spacing:2px;">SELECT AGENT</div>
-      <div style="font-size:9px;color:#445;margin-top:1px;">キャラごとに強化・装備データが独立保存</div>
-    </div>
-  </div>
-  <div class="char-grid" id="char-grid"></div>
-  <div style="padding:10px 12px;text-align:center;flex-shrink:0;">
-    <button class="btn big gold" onclick="confirmCharSelect()">DEPLOY ▶▶</button>
-  </div>
-</div>
+<script src="sprites.js"></script>
+<script src="main.js"></script>
 
-<!-- HUB -->
-<div id="screen-hub" class="screen">
-  <div class="header">
-    <div style="display:flex;align-items:center;gap:7px;">
-      <button class="btn back" onclick="switchScreen('charselect')">◀ キャラ変更</button>
-      <span style="font-family:'Orbitron',sans-serif;font-size:10px;color:#334;">BASE CAMP</span>
-      <span class="save-badge" id="save-status">💾 SAVED</span>
-    </div>
-    <div class="gold-txt" style="font-size:11px;">🪙<span id="ui-coin">0</span> 💎<span id="ui-core">0</span> 🔮<span id="ui-dust">0</span></div>
-  </div>
-  <div class="hub-tabs">
-    <div class="hub-tab active" onclick="switchHubTab('status')" id="tab-status">ステータス</div>
-    <div class="hub-tab" onclick="switchHubTab('shop')" id="tab-shop">強化</div>
-    <div class="hub-tab" onclick="switchHubTab('equip')" id="tab-equip">装備</div>
-    <div class="hub-tab" onclick="switchHubTab('skills')" id="tab-skills">スキル</div>
-    <div class="hub-tab" onclick="switchHubTab('achieve')" id="tab-achieve">実績</div>
-  </div>
-
-  <!-- STATUS TAB -->
-  <div class="hub-tab-body active" id="tab-body-status">
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <div class="hub-panel" style="flex:0 0 auto;min-width:180px;display:flex;flex-direction:column;align-items:center;gap:7px;">
-        <div id="hub-sprite-wrap" style="height:100px;display:flex;align-items:center;justify-content:center;"></div>
-        <div id="hub-cname" style="font-size:18px;font-weight:900;color:var(--cyan);text-align:center;"></div>
-        <div id="hub-ctitle" style="font-size:10px;color:#445;text-align:center;"></div>
-        <div id="hub-rank-badge" style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:10px;"></div>
-      </div>
-      <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px;">
-        <div class="hub-panel">
-          <div style="font-size:10px;color:#445;margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:1px;">COMBAT STATS</div>
-          <div class="hub-stat-grid">
-            <div class="stat-box"><div class="s-label">MAX HP</div><div class="s-val" id="hub-hp" style="color:var(--green);">-</div></div>
-            <div class="stat-box"><div class="s-label">MAX EP</div><div class="s-val" id="hub-ep" style="color:var(--cyan);">-</div></div>
-            <div class="stat-box"><div class="s-label">BASE ATK</div><div class="s-val" id="hub-atk" style="color:var(--magenta);">-</div></div>
-            <div class="stat-box"><div class="s-label">DEF</div><div class="s-val" id="hub-def" style="color:#88aacc;">-</div></div>
-          </div>
-        </div>
-        <div class="hub-panel" id="hub-equip-preview" style="font-size:11px;">
-          <div style="font-size:10px;color:#445;margin-bottom:5px;font-family:'Orbitron',sans-serif;letter-spacing:1px;">EQUIPPED GEAR</div>
-          <div id="hub-gear-summary"></div>
-        </div>
-      </div>
-    </div>
-    <div class="hub-panel">
-      <div style="font-size:10px;color:#445;margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:1px;">PROGRESS</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-size:11px;">
-        <div style="text-align:center;"><div style="color:#556;font-size:9px;">最高ステージ</div><div style="font-size:17px;font-weight:900;color:var(--gold);" id="hub-maxlv">-</div></div>
-        <div style="text-align:center;"><div style="color:#556;font-size:9px;">総撃破数</div><div style="font-size:17px;font-weight:900;color:var(--magenta);" id="hub-kills">-</div></div>
-        <div style="text-align:center;"><div style="color:#556;font-size:9px;">獲得コイン</div><div style="font-size:17px;font-weight:900;color:var(--gold);" id="hub-totalcoin">-</div></div>
-      </div>
-    </div>
-    <div style="text-align:center;padding-bottom:4px;">
-      <button class="btn big" style="font-size:14px;width:100%;" onclick="switchScreen('map')">🗺 STAGE MAP ▶</button>
-    </div>
-  </div>
-
-  <!-- SHOP TAB -->
-  <div class="hub-tab-body" id="tab-body-shop">
-    <div class="hub-panel">
-      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--gold);margin-bottom:8px;letter-spacing:2px;">◆ BLACK MARKET</div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">MAX HP <span class="shop-lv-tag" id="shop-lv-hp">Lv.0</span></div><div class="shop-item-desc">耐久力UP (+20 per lv)</div></div>
-        <button class="btn sm" id="btn-buy-hp" onclick="buyUpgrade('hp')">🪙 <span id="cost-hp">50</span></button>
-      </div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">MAX EP <span class="shop-lv-tag" id="shop-lv-ep">Lv.0</span></div><div class="shop-item-desc">スキル回数UP (+10 per lv)</div></div>
-        <button class="btn sm" id="btn-buy-ep" onclick="buyUpgrade('ep')">🪙 <span id="cost-ep">50</span></button>
-      </div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">BASE ATK <span class="shop-lv-tag" id="shop-lv-atk">Lv.0</span></div><div class="shop-item-desc">攻撃力UP (+5 per lv)</div></div>
-        <button class="btn sm" id="btn-buy-atk" onclick="buyUpgrade('atk')">🪙 <span id="cost-atk">100</span></button>
-      </div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;display:flex;align-items:center;">BASE DEF <span class="shop-lv-tag" id="shop-lv-def">Lv.0</span></div><div class="shop-item-desc">防御力UP (ダメージ軽減)</div></div>
-        <button class="btn sm" id="btn-buy-def" onclick="buyUpgrade('def')">🪙 <span id="cost-def">80</span></button>
-      </div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;color:var(--purple);">VOID AWAKENING</div><div class="shop-item-desc">全ステータス+15% (1回のみ)</div></div>
-        <button class="btn sm purple" id="btn-buy-awk" onclick="buyVoidAwaken()">💎 3</button>
-      </div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;color:var(--magenta);">SECOND AWAKENING</div><div class="shop-item-desc">全ステータス+20% ★覚醒後のみ</div></div>
-        <button class="btn sm magenta" id="btn-buy-awk2" onclick="buyVoidAwaken2()">💎 8</button>
-      </div>
-    </div>
-    <div class="hub-panel">
-      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--orange);margin-bottom:8px;letter-spacing:2px;">◆ DUST FORGE</div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;">ランダム装備召喚</div><div class="shop-item-desc">ダストを消費してランダム装備を獲得</div></div>
-        <button class="btn sm orange" onclick="forgeItem()">🔮 <span id="forge-cost">3</span></button>
-      </div>
-      <div class="shop-item">
-        <div><div style="font-weight:700;font-size:12px;">装備分解</div><div class="shop-item-desc">インベントリの装備→ダスト変換</div></div>
-        <button class="btn sm" onclick="switchHubTab('equip')">装備タブへ →</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- EQUIP TAB -->
-  <div class="hub-tab-body" id="tab-body-equip">
-    <div class="hub-panel">
-      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:8px;letter-spacing:1px;">◆ EQUIPPED</div>
-      <div class="equip-slots" id="equip-slots"></div>
-    </div>
-    <div class="hub-panel">
-      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--gold);margin-bottom:6px;letter-spacing:1px;">◆ INVENTORY <span id="inv-count" style="font-size:10px;color:#445;"></span></div>
-      <div class="inventory-grid" id="inventory-grid"></div>
-      <div id="inv-empty" style="color:#334;font-size:11px;text-align:center;padding:20px 0;display:none;">装備アイテムなし<br><span style="font-size:9px;color:#223;">ステージをクリアしてドロップを集めよう！</span></div>
-    </div>
-  </div>
-
-  <!-- SKILL UPGRADES TAB -->
-  <div class="hub-tab-body" id="tab-body-skills">
-    <div class="hub-panel">
-      <div style="font-family:'Orbitron',sans-serif;font-size:11px;color:var(--cyan);margin-bottom:8px;letter-spacing:1px;">◆ SKILL FORGE</div>
-      <div id="skill-upgrade-list"></div>
-    </div>
-  </div>
-
-  <!-- ACHIEVEMENTS TAB -->
-  <div class="hub-tab-body" id="tab-body-achieve">
-    <div class="achieve-grid" id="achieve-grid"></div>
-  </div>
-</div>
-
-<!-- MAP -->
-<div id="screen-map" class="screen">
-  <div class="header">
-    <div style="display:flex;align-items:center;gap:7px;">
-      <button class="btn back" onclick="switchScreen('hub')">◀ BASE</button>
-      <span style="font-family:'Orbitron',sans-serif;font-size:10px;color:var(--cyan);">STAGE MAP</span>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div style="font-size:10px;color:#556;">チャレンジ: <span style="color:var(--orange);">+50% 報酬</span></div>
-      <div class="gold-txt" style="font-size:11px;">🪙<span id="map-coin">0</span></div>
-    </div>
-  </div>
-  <div class="map-body" id="map-body"></div>
-</div>
-
-<!-- BATTLE -->
-<div id="screen-battle" class="screen">
-  <div class="header">
-    <div style="display:flex;align-items:center;gap:7px;">
-      <button class="btn back sm" onclick="retreatBattle()">◀ 撤退</button>
-      <div id="stage-name-txt" style="color:var(--cyan);font-family:'Orbitron',sans-serif;font-size:10px;letter-spacing:1px;"></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <div id="combo-display" class="combo-display"></div>
-      <div class="gold-txt" style="font-size:11px;">🪙<span id="battle-coin">0</span></div>
-    </div>
-  </div>
-  <div id="challenge-banner" class="challenge-banner">⚠ チャレンジモード: 敵強化中 | 報酬+50%</div>
-  <div class="battle-scene">
-    <div id="player-card" class="battle-card">
-      <div class="card-name" id="b-pname" style="color:var(--cyan);"></div>
-      <div class="card-sprite-area"><canvas id="player-sprite" width="128" height="128" style="width:clamp(72px,12vw,112px);height:clamp(72px,12vw,112px);"></canvas></div>
-      <div class="b-equip-row" id="b-equip-tags"></div>
-      <div class="efx-row" id="player-efx"></div>
-      <div class="bar-label">HP <span id="p-hp-txt" style="color:var(--green);font-weight:700;"></span>/<span id="p-maxhp"></span></div>
-      <div class="bar-track"><div id="p-hp-bar" class="bar-fill hp-fill" style="width:100%"></div></div>
-      <div class="bar-label">EP <span id="p-ep-txt" style="color:var(--cyan);font-weight:700;"></span>/<span id="p-maxep"></span></div>
-      <div class="bar-track"><div id="p-ep-bar" class="bar-fill ep-fill" style="width:100%"></div></div>
-    </div>
-    <div class="vs-gfx" id="vs-label">VS</div>
-    <div id="enemy-card" class="battle-card">
-      <div class="card-name" id="b-ename" style="color:var(--magenta);"></div>
-      <div class="card-sprite-area"><canvas id="enemy-sprite" width="128" height="128" style="width:clamp(72px,12vw,112px);height:clamp(72px,12vw,112px);"></canvas></div>
-      <div class="efx-row" id="enemy-efx"></div>
-      <div class="bar-label">HP <span id="e-hp-txt" style="color:var(--magenta);font-weight:700;"></span>/<span id="e-maxhp"></span></div>
-      <div class="bar-track"><div id="e-hp-bar" class="bar-fill enemy-fill" style="width:100%"></div></div>
-    </div>
-  </div>
-  <div class="battle-bottom">
-    <div class="cmd-panel" id="cmd-panel"></div>
-    <div class="log-panel" id="log-panel"></div>
-  </div>
-</div>
-
-</div><!-- /wrap -->
-
-<script>
-'use strict';
-
-// ═══════════════════════════════════════════════════════════
-//  FIREBASE CONFIGURATION
-//  ▼▼▼ あなたのFirebaseプロジェクトの設定に書き換えてください ▼▼▼
-// ═══════════════════════════════════════════════════════════
-var FIREBASE_CONFIG = {
-  apiKey:            "AIzaSyBUIvrsi6ye7iUXYod2Hw386rEZghWUJJo",
-  authDomain:        "mygame-68feb.firebaseapp.com",
-  projectId:         "mygame-68feb",
-  storageBucket:     "mygame-68feb.firebasestorage.app",
-  messagingSenderId: "967293890321",
-  appId:             "1:967293890321:web:09dc8b72ac3dd997d626b0"
-};
-
-// Discord OAuth2設定（Discord Developer Portalで取得）
-// redirect_uri はこのファイルのURLと完全一致させること
-var DISCORD_CLIENT_ID = "YOUR_DISCORD_CLIENT_ID";
-var DISCORD_REDIRECT_URI = window.location.href.split('#')[0].split('?')[0];
-
-// ═══════════════════════════════════════════════════════════
-//  FIREBASE INIT（設定が不完全でも動作継続）
-// ═══════════════════════════════════════════════════════════
-var fbApp = null, fbAuth = null, fbDb = null, firebaseReady = false;
-(function initFirebase() {
-  try {
-    if (FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') return; // 未設定なら無視
-    fbApp  = firebase.initializeApp(FIREBASE_CONFIG);
-    fbAuth = firebase.auth();
-    fbDb   = firebase.firestore();
-    firebaseReady = true;
-
-    // Auth state change listener
-    fbAuth.onAuthStateChanged(function(user) {
-      if (user) {
-        onFirebaseSignIn(user);
-      } else {
-        onFirebaseSignOut();
-      }
-    });
-  } catch(e) {
-    console.warn('Firebase init failed:', e);
-  }
-})();
-
-// ═══════════════════════════════════════════════════════════
-//  ACCOUNT STATE
-// ═══════════════════════════════════════════════════════════
-var accountInfo = null;  // { uid, name, email, photoURL, provider }
-var ACCOUNT_KEY = 'vt_account';
-
-function getSaveKey() {
-  if (accountInfo) return 'voidtactics_v7_' + accountInfo.uid;
-  return 'voidtactics_v7';
-}
-var LOCAL_SAVE_KEY = 'voidtactics_v7'; // 未連携時のローカルキー
-
-// ── Google Sign-In ──
-function signInWithGoogle() {
-  if (!firebaseReady) { showFirebaseNotice(); return; }
-  var provider = new firebase.auth.GoogleAuthProvider();
-  showAuthLoading(true);
-  fbAuth.signInWithPopup(provider)
-    .then(function(result) { showAuthLoading(false); })
-    .catch(function(e) { showAuthLoading(false); showToast('❌ Googleログイン失敗: ' + e.code); });
-}
-
-// ── Apple Sign-In (Firebase) ──
-function signInWithApple() {
-  if (!firebaseReady) { showFirebaseNotice(); return; }
-  var provider = new firebase.auth.OAuthProvider('apple.com');
-  provider.addScope('email');
-  provider.addScope('name');
-  showAuthLoading(true);
-  fbAuth.signInWithPopup(provider)
-    .then(function(result) { showAuthLoading(false); })
-    .catch(function(e) { showAuthLoading(false); showToast('❌ Appleログイン失敗: ' + e.code); });
-}
-
-// ── Discord Sign-In (OAuth2 Implicit Flow) ──
-function signInWithDiscord() {
-  if (DISCORD_CLIENT_ID === 'YOUR_DISCORD_CLIENT_ID') {
-    showToast('⚠ Discord Client IDを設定してください');
-    return;
-  }
-  var state = Math.random().toString(36).slice(2);
-  sessionStorage.setItem('discord_state', state);
-  var url = 'https://discord.com/oauth2/authorize'
-    + '?client_id=' + DISCORD_CLIENT_ID
-    + '&redirect_uri=' + encodeURIComponent(DISCORD_REDIRECT_URI)
-    + '&response_type=token'
-    + '&scope=identify'
-    + '&state=' + state;
-  // 現在のページをセーブしてからリダイレクト
-  saveGame();
-  window.location.href = url;
-}
-
-// ── Discord Callback (ページ読み込み時にURLハッシュをチェック) ──
-function checkDiscordCallback() {
-  var hash = window.location.hash;
-  if (!hash || hash.indexOf('access_token') < 0) return;
-  var params = {};
-  hash.slice(1).split('&').forEach(function(p) {
-    var kv = p.split('='); params[kv[0]] = decodeURIComponent(kv[1] || '');
-  });
-  if (!params.access_token) return;
-  var savedState = sessionStorage.getItem('discord_state');
-  if (savedState && params.state !== savedState) { showToast('❌ Discord state不一致'); return; }
-  sessionStorage.removeItem('discord_state');
-  // URLを綺麗にする
-  history.replaceState(null, '', window.location.pathname);
-  showAuthLoading(true);
-  // Discord APIでユーザー情報取得
-  fetch('https://discord.com/api/users/@me', {
-    headers: { 'Authorization': 'Bearer ' + params.access_token }
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(user) {
-    showAuthLoading(false);
-    accountInfo = {
-      uid: 'discord_' + user.id,
-      name: user.username + (user.discriminator && user.discriminator !== '0' ? '#' + user.discriminator : ''),
-      email: user.email || '',
-      photoURL: user.avatar
-        ? 'https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.png'
-        : null,
-      provider: 'discord'
-    };
-    localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountInfo));
-    onAccountSignIn(accountInfo);
-    showToast('🎮 Discordでログイン: ' + accountInfo.name);
-  })
-  .catch(function(e) {
-    showAuthLoading(false);
-    showToast('❌ Discord情報取得失敗');
-  });
-}
-
-// ── Firebase認証成功時 ──
-function onFirebaseSignIn(firebaseUser) {
-  var providerData = firebaseUser.providerData[0];
-  var provider = providerData ? providerData.providerId.replace('.com','') : 'unknown';
-  accountInfo = {
-    uid: firebaseUser.uid,
-    name: firebaseUser.displayName || firebaseUser.email || 'Agent',
-    email: firebaseUser.email || '',
-    photoURL: firebaseUser.photoURL,
-    provider: provider
-  };
-  localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountInfo));
-  onAccountSignIn(accountInfo);
-}
-
-function onFirebaseSignOut() {
-  accountInfo = null;
-  localStorage.removeItem(ACCOUNT_KEY);
-  updateAccountUI();
-}
-
-// ── 共通サインイン処理 ──
-function onAccountSignIn(info) {
-  // アカウント用セーブを読み込む
-  var hasAccountSave = !!localStorage.getItem(getSaveKey());
-  var hasLocalSave   = !!localStorage.getItem(LOCAL_SAVE_KEY) && LOCAL_SAVE_KEY !== getSaveKey();
-
-  if (hasAccountSave) {
-    // アカウントデータを使用
-    loadSave();
-    checkSaveOnStart();
-  } else if (hasLocalSave) {
-    // ローカルデータがある → 移行バナーを表示
-    // まず既存ローカルデータで動かしておく
-    loadSaveFromKey(LOCAL_SAVE_KEY);
-    checkSaveOnStart();
-  }
-
-  updateAccountUI();
-
-  // Firestore からクラウドデータを取得して最新に同期
-  if (firebaseReady && fbDb) {
-    cloudLoad(function(cloudData) {
-      if (cloudData) {
-        // クラウドデータがある場合 → タイムスタンプ比較して新しい方を採用
-        var localTs  = gameData._savedAt || 0;
-        var cloudTs  = cloudData._savedAt || 0;
-        if (cloudTs > localTs) {
-          gameData = cloudData;
-          if (!gameData.inventory)  gameData.inventory = [];
-          if (!gameData.roster)     gameData.roster = {};
-          if (!gameData.stats)      gameData.stats = {kills:0,totalCoins:0,clears:{}};
-          saveGame();
-          checkSaveOnStart();
-          showToast('☁ クラウドデータを復元しました');
-        }
-      }
-    });
-  }
-
-  var sb = document.getElementById('sync-badge');
-  if (sb) {
-    if (firebaseReady) {
-      sb.className = 'account-sync-badge sync-cloud'; sb.textContent = '☁ CLOUD';
-    } else {
-      sb.className = 'account-sync-badge sync-local'; sb.textContent = '💾 LOCAL';
-    }
-  }
-
-  // 移行バナーチェック
-  var migBanner = document.getElementById('migrate-banner');
-  if (migBanner) migBanner.style.display = hasLocalSave && !hasAccountSave ? 'block' : 'none';
-}
-
-function migrateLocalToCloud() {
-  var localData = localStorage.getItem(LOCAL_SAVE_KEY);
-  if (!localData) { showToast('移行するデータが見つかりません'); return; }
-  // ローカルキーを新しいアカウントキーにコピー
-  localStorage.setItem(getSaveKey(), localData);
-  localStorage.removeItem(LOCAL_SAVE_KEY);
-  loadSave();
-  checkSaveOnStart();
-  document.getElementById('migrate-banner').style.display = 'none';
-  // Firestoreにも保存
-  cloudSave();
-  showToast('✅ データをアカウントに移行しました！');
-}
-
-function dismissMigrate() {
-  document.getElementById('migrate-banner').style.display = 'none';
-}
-
-function signOutAccount() {
-  showConfirm('🚪','ログアウトしますか？','ログアウト後もローカルデータは保持されます。\n再ログインでデータを復元できます。','#667',function(){
-    if (firebaseReady && fbAuth) {
-      fbAuth.signOut().catch(function(){});
-    } else {
-      accountInfo = null;
-      localStorage.removeItem(ACCOUNT_KEY);
-      updateAccountUI();
-    }
-    showToast('👋 ログアウトしました');
-  });
-}
-
-// ── Account UI更新 ──
-function updateAccountUI() {
-  var guestUI    = document.getElementById('account-guest-ui');
-  var loggedinUI = document.getElementById('account-loggedin-ui');
-  if (!guestUI || !loggedinUI) return;
-
-  if (accountInfo) {
-    guestUI.style.display    = 'none';
-    loggedinUI.style.display = 'block';
-    document.getElementById('account-name-txt').textContent = accountInfo.name;
-    var provLabels = {google:'Google', discord:'Discord', apple:'Apple'};
-    var prov = accountInfo.provider || '';
-    var provLabel = provLabels[prov] || prov;
-    document.getElementById('account-sub-txt').textContent = (accountInfo.email || '') + (provLabel ? ' (' + provLabel + ')' : '');
-    // Avatar
-    var avatarWrap = document.getElementById('account-avatar-wrap');
-    if (accountInfo.photoURL) {
-      avatarWrap.innerHTML = '<img class="account-avatar" src="' + accountInfo.photoURL + '" onerror="this.style.display=\'none\'">';
-    } else {
-      avatarWrap.innerHTML = '<div class="account-avatar-placeholder">👤</div>';
-    }
-  } else {
-    guestUI.style.display    = 'block';
-    loggedinUI.style.display = 'none';
-    document.getElementById('migrate-banner').style.display = 'none';
-  }
-}
-
-function showAuthLoading(on) {
-  var el = document.getElementById('auth-loading');
-  if (el) el.style.display = on ? 'block' : 'none';
-}
-
-function showFirebaseNotice() {
-  var el = document.getElementById('firebase-notice');
-  if (!el) return;
-  el.style.display = 'block';
-  el.textContent = '⚠ Firebase設定が必要です（コード上部のFIREBASE_CONFIGを設定）';
-}
-
-// ═══════════════════════ CLOUD SAVE / LOAD ═══════════════════════
-function cloudSave() {
-  if (!firebaseReady || !fbDb || !accountInfo) return;
-  try {
-    var data = JSON.parse(JSON.stringify(gameData));
-    data._savedAt = Date.now();
-    fbDb.collection('saves').doc(accountInfo.uid).set(data)
-      .catch(function(e){ console.warn('Firestore save error:', e); });
-  } catch(e) {}
-}
-
-function cloudLoad(callback) {
-  if (!firebaseReady || !fbDb || !accountInfo) { callback(null); return; }
-  fbDb.collection('saves').doc(accountInfo.uid).get()
-    .then(function(doc) {
-      if (doc.exists) callback(doc.data());
-      else callback(null);
-    })
-    .catch(function(e){ console.warn('Firestore load error:', e); callback(null); });
-}
-
-// ═══════════════════════ PIXEL ENGINE ═══════════════════════
-var SC=4;
-function px(c,x,y,col){if(x<0||x>31||y<0||y>31)return;c.fillStyle=col;c.fillRect(x*SC,y*SC,SC,SC);}
-function pxs(c,arr,col){for(var i=0;i<arr.length;i++)px(c,arr[i][0],arr[i][1],col);}
-function pxr(c,x1,y1,x2,y2,col){c.fillStyle=col;c.fillRect(x1*SC,y1*SC,(x2-x1+1)*SC,(y2-y1+1)*SC);}
-function pxclr(c){c.clearRect(0,0,128,128);}
-var G_TICK=0,BLINKS={};
-function initBlink(id){BLINKS[id]={on:false,next:100+Math.floor(Math.random()*100),end:0};}
-function getBlink(id){var b=BLINKS[id];if(!b)return false;if(G_TICK>=b.next&&!b.on){b.on=true;b.end=G_TICK+7;}if(b.on&&G_TICK>=b.end){b.on=false;b.next=G_TICK+100+Math.floor(Math.random()*160);}return b.on;}
-function drawChibiFace(c,cx,cy,eyeColor,blink,blushColor){
-  var skin='#ffe8d6';pxr(c,cx-6,cy-5,cx+6,cy+3,skin);pxr(c,cx-5,cy-6,cx+5,cy-6,skin);
-  pxs(c,[[cx-7,cy-3],[cx-7,cy-2],[cx-7,cy-1],[cx-7,cy],[cx-7,cy+1],[cx+7,cy-3],[cx+7,cy-2],[cx+7,cy-1],[cx+7,cy],[cx+7,cy+1]],skin);
-  pxr(c,cx-4,cy+4,cx+4,cy+4,skin);
-  c.fillStyle=blushColor||'rgba(255,150,150,0.5)';c.fillRect((cx-7)*SC,(cy+1)*SC,3*SC,2*SC);c.fillRect((cx+4)*SC,(cy+1)*SC,3*SC,2*SC);
-  if(blink){pxr(c,cx-6,cy,cx-2,cy,'#331122');pxr(c,cx+2,cy,cx+6,cy,'#331122');}
-  else{pxr(c,cx-6,cy-3,cx-2,cy+1,'#ffffff');pxr(c,cx+2,cy-3,cx+6,cy+1,'#ffffff');pxr(c,cx-5,cy-2,cx-3,cy+1,eyeColor);pxr(c,cx+3,cy-2,cx+5,cy+1,eyeColor);px(c,cx-4,cy-1,'#000');px(c,cx-4,cy,'#000');px(c,cx+4,cy-1,'#000');px(c,cx+4,cy,'#000');px(c,cx-5,cy-2,'#fff');px(c,cx-4,cy-3,'#fff');px(c,cx+3,cy-2,'#fff');px(c,cx+4,cy-3,'#fff');pxr(c,cx-6,cy-4,cx-2,cy-4,'#221133');px(c,cx-7,cy-3,'#221133');pxr(c,cx+2,cy-4,cx+6,cy-4,'#221133');px(c,cx+7,cy-3,'#221133');}
-  px(c,cx,cy+3,'#ff88aa');
-}
-// ═══════════════════════ SPRITES ═══════════════════════
-var LUNA={id:'luna',draw:function(c,t){pxclr(c);var b=getBlink('luna'),f=Math.floor(t/12)%4,bo=f===1?1:0,ho=[0,1,2,1][f],so=[0,-1,-2,-1][f],h='#ff66aa',hD='#cc3377',dr='#ee2277',dL='#ff88bb';pxr(c,2-ho,10+ho,7,24+ho,hD);pxr(c,24+ho,10-ho,29,24-ho,hD);pxr(c,11,19,19,27-bo,dr);pxr(c,10,24-bo,20,28-bo,dL);pxr(c,13,28-bo,14,30,'#ffe8d6');pxr(c,16,28-bo,17,30,'#ffe8d6');drawChibiFace(c,15,12+bo,'#00ccff',b);pxr(c,10,5+bo,20,9+bo,h);pxr(c,9,8+bo,11,14+bo,h);pxr(c,19,8+bo,21,14+bo,h);pxs(c,[[14,9+bo],[15,10+bo],[16,9+bo]],h);var sy=14+so;pxr(c,5,sy,6,sy+14,'#ffdd66');c.fillStyle='rgba(0,232,255,'+(0.3+f*0.1)+')';c.fillRect(1*SC,(sy-4)*SC,10*SC,10*SC);pxr(c,4,sy-2,7,sy+1,'#00ffff');px(c,5,sy-1,'#ffffff');}};
-var GANT={id:'gant',draw:function(c,t){pxclr(c);var b=getBlink('gant'),f=Math.floor(t/14)%4,bo=f===2?1:0,ho=[0,-1,0,1][f],so=[0,0,1,1][f],h='#5c3a21',hH='#8a5531',aC='#2255aa',aL='#5588ee';pxr(c,10,19,20,26-bo,aC);pxr(c,12,19,18,26-bo,aL);pxr(c,11,26-bo,14,31,'#333344');pxr(c,16,26-bo,19,31,'#333344');drawChibiFace(c,15,13+bo,'#ffaa00',b);pxr(c,10,6+bo,20,10+bo,h);pxs(c,[[9,10+bo],[9,11+bo],[21,10+bo],[21,11+bo]],h);pxs(c,[[14,4+bo+ho],[15,4+bo+ho],[16,5+bo+ho]],hH);var sy=12+bo+so;pxr(c,24,sy,26,sy+16,'#cccccc');pxr(c,25,sy+1,25,sy+15,'#ffffff');pxr(c,22,sy+12,28,sy+13,'#ddaa00');pxr(c,24,sy+14,26,sy+18,'#aa5522');c.fillStyle='rgba(100,200,255,'+(0.1+(f%2)*0.1)+')';c.fillRect(23*SC,(sy-2)*SC,5*SC,15*SC);}};
-var FORS={id:'fors',draw:function(c,t){pxclr(c);var f=Math.floor(t/15)%4,bo=(f===1||f===2)?1:0,po=[0,1,2,1][f],mt='#778899',mtL='#aabbcc',mtD='#445566';pxr(c,9,18,23,28-bo,mt);pxr(c,12,19,20,27-bo,mtL);pxr(c,11,28-bo,15,31,mtD);pxr(c,17,28-bo,21,31,mtD);pxr(c,8,6+bo,24,18+bo,mtD);pxr(c,9,7+bo,23,17+bo,mt);pxr(c,10,11+bo,22,14+bo,'#111122');var eg=(f%2===0)?'#ffcc00':'#ff8800';pxr(c,12,12+bo,14,13+bo,eg);pxr(c,18,12+bo,20,13+bo,eg);pxr(c,15+po,1+bo,17+po,7+bo,'#cc2233');pxr(c,2,14,8,29,mtD);pxr(c,3,15,7,28,mtL);pxr(c,4,18,6,25,'#cc2233');}};
-var SHADOW={id:'shadow',draw:function(c,t){pxclr(c);var b=getBlink('shadow'),f=Math.floor(t/12)%4,bo=f===2?1:0,co=[0,1,2,1][f],oo=[0,-1,-2,-1][f],ht='#221133',rb='#331144',tl='#00ffaa';pxr(c,6,16,26,30-bo,rb);pxr(c,3,14+co,10,26+co,'#110822');pxr(c,22,14-co,29,26-co,'#110822');drawChibiFace(c,15,14+bo,tl,b,'rgba(150,50,150,0.4)');pxr(c,4,9+bo,28,11+bo,ht);pxr(c,10,2+bo,22,9+bo,ht);pxr(c,12,0+bo,20,2+bo,ht);pxr(c,10,8+bo,22,9+bo,tl);c.fillStyle='rgba(0,255,170,'+(0.5+f*0.1)+')';c.fillRect(4*SC,(20+oo)*SC,3*SC,3*SC);c.fillRect(25*SC,(15-oo)*SC,2*SC,2*SC);}};
-
-// ENEMY SPRITES
-var GOBLIN={draw:function(c,t){pxclr(c);var f=Math.floor(t/10)%4,bo=(f===1)?1:0,ho=[0,1,0,-1][f];pxr(c,10,14,21,22,'#3d7a3d');pxr(c,11,15,20,21,'#55aa55');pxr(c,11,10,20,14,'#3d7a3d');pxr(c,13,22,15,28,'#3d5a3d');pxr(c,16,22,18,28,'#3d5a3d');pxr(c,8,12+ho,11,16+ho,'#2d5a2d');pxr(c,20,12-ho,23,16-ho,'#2d5a2d');pxr(c,13,11,18,13,'#ffe8d6');pxr(c,12,12,19,15,'#ffe8d6');pxr(c,13,13,14,14,'#ff0000');pxr(c,17,13,18,14,'#ff0000');pxr(c,10,8+bo,11,12,'#3d7a3d');pxr(c,20,8-bo,21,12,'#3d7a3d');pxr(c,22,14+ho,26,18+ho,'#888');pxr(c,23,15+ho,25,17+ho,'#ccc');}};
-var FOREST_TROLL={draw:function(c,t){pxclr(c);var f=Math.floor(t/16)%2,bo=f;pxr(c,7,6,24,26,'#4a7a2a');pxr(c,8,7,23,25,'#5a9a3a');pxr(c,4,10+bo,8,22+bo,'#4a7a2a');pxr(c,23,10-bo,27,22-bo,'#4a7a2a');pxr(c,10,28,14,31,'#3a5a1a');pxr(c,17,28,21,31,'#3a5a1a');pxr(c,10,9,21,15,'#6aaa4a');pxr(c,11,10,20,14,'#88cc66');pxr(c,11,11,13,13,'#ffaa00');pxr(c,18,11,20,13,'#ffaa00');pxr(c,8,5,12,8,'#2a5a0a');pxr(c,18,4,23,8,'#2a5a0a');}};
-var GRASS_BOSS={draw:function(c,t){pxclr(c);var p=Math.sin(t*.12)>0;c.fillStyle=p?'rgba(0,200,50,.1)':'rgba(0,200,50,.04)';c.fillRect(0,0,128,128);pxr(c,3,3,28,28,'#1a5500');pxr(c,4,4,27,27,'#2a8800');pxr(c,5,5,26,26,'#33aa00');pxr(c,8,8,23,20,'#44cc00');pxr(c,10,9,22,18,'#66ff22');pxr(c,12,11,14,16,'#ff4400');pxr(c,17,11,19,16,'#ff4400');if(p){c.fillStyle='rgba(255,68,0,.7)';c.fillRect(12*SC,11*SC,3*SC,6*SC);c.fillRect(17*SC,11*SC,3*SC,6*SC);}pxr(c,1,6,5,12,'#1a5500');pxr(c,26,4,30,11,'#1a5500');if(p){c.strokeStyle='#00ff44';c.lineWidth=2;c.strokeRect(3*SC,3*SC,26*SC,26*SC);}}};
-var SCORPION={draw:function(c,t){pxclr(c);var f=Math.floor(t/10)%4,sh=[0,1,0,-1][f];pxr(c,11,14,20,22,'#cc8833');pxr(c,12,15,19,21,'#ddaa55');pxr(c,13,12,18,15,'#cc8833');pxr(c,12,13,13,13,'#ff3300');pxr(c,18,13,19,13,'#ff3300');pxr(c,5,14+sh,11,17+sh,'#cc8833');pxr(c,20,14-sh,26,17-sh,'#cc8833');pxr(c,4,17+sh,7,20+sh,'#cc8833');pxr(c,24,17-sh,27,20-sh,'#cc8833');pxr(c,14,8,17,12,'#cc8833');pxr(c,13,5,18,9,'#ff3300');px(c,15,4,'#ffaa00');px(c,16,4,'#ffaa00');}};
-var MUMMY={draw:function(c,t){pxclr(c);var f=Math.floor(t/14)%4,bo=(f===1||f===3)?1:0,sw=[0,2,0,-2][f];pxr(c,10,8,21,28,'#ddcc99');pxr(c,11,9,20,27,'#eeddaa');for(var y=9;y<=27;y+=3)pxr(c,10,y,21,y,'#bbaa77');pxr(c,12,10,19,13,'#ffe8d6');pxr(c,13,11,15,12,'#ff6600');pxr(c,17,11,18,12,'#ff6600');pxr(c,7,12+bo,10,18+bo,'#ddcc99');pxr(c,21,12-bo,24,18-bo,'#ddcc99');pxr(c,13+sw,5,18+sw,9,'#ddcc99');}};
-var DESERT_BOSS={draw:function(c,t){pxclr(c);var p=Math.sin(t*.1)>0;c.fillStyle=p?'rgba(255,165,0,.1)':'rgba(255,165,0,.04)';c.fillRect(0,0,128,128);pxr(c,2,4,29,28,'#aa6600');pxr(c,3,5,28,27,'#cc8800');pxr(c,4,6,27,26,'#ddaa33');pxr(c,8,6,23,12,'#ffe8aa');pxr(c,10,8,14,11,'#ff6600');pxr(c,17,8,21,11,'#ff6600');if(p){c.fillStyle='rgba(255,100,0,.8)';c.fillRect(10*SC,8*SC,5*SC,4*SC);c.fillRect(17*SC,8*SC,5*SC,4*SC);}pxr(c,0,14,4,22,'#aa6600');pxr(c,27,12,31,20,'#aa6600');pxr(c,3,2,7,6,'#ffcc00');if(p){c.strokeStyle='#ffcc00';c.lineWidth=1;c.strokeRect(2*SC,4*SC,28*SC,25*SC);}}};
-var VOID_CREEPER={draw:function(c,t){pxclr(c);var p=Math.sin(t*.15)>0;c.fillStyle=p?'rgba(150,0,255,.08)':'rgba(150,0,255,.13)';c.fillRect(0,0,128,128);var bd='#1d0033',bL='#3d0066',ey='#ff00ff';pxr(c,4,5,27,19,bd);for(var x=5;x<=26;x++)px(c,x,4,bd);for(var y=6;y<=18;y++){px(c,3,y,bd);px(c,28,y,bd);}pxr(c,7,21,24,22,bd);for(var x=4;x<=27;x++)px(c,x,5,bL);pxr(c,5,9,10,14,ey);pxr(c,20,9,25,14,ey);c.fillStyle=p?'rgba(255,0,255,.55)':'rgba(255,0,255,.4)';c.fillRect(5*SC,9*SC,6*SC,6*SC);c.fillRect(20*SC,9*SC,6*SC,6*SC);pxr(c,6,16,25,18,bd);for(var x=6;x<=25;x+=2)px(c,x,16,'#eee');var tm=p?1:0;pxs(c,[[2,14+tm],[1,15+tm],[1,16+tm],[29,13-tm],[30,14-tm],[30,15-tm]],bd);}};
-var SHADOW_SPECTER={draw:function(c,t){pxclr(c);var p=Math.floor(t/8)%2===0;c.fillStyle=p?'rgba(0,255,200,.06)':'rgba(100,0,255,.08)';c.fillRect(0,0,128,128);var ac=p?'#004444':'#220044',bc=p?'#006666':'#440088',ec=p?'#00ffff':'#aa44ff';pxr(c,10,8,21,24,ac);pxr(c,11,9,20,23,bc);pxr(c,8,10,10,20,ac);pxr(c,21,10,23,20,ac);pxr(c,12,10,14,14,ec);pxr(c,17,10,19,14,ec);c.fillStyle=p?'rgba(0,255,255,.6)':'rgba(170,68,255,.6)';c.fillRect(12*SC,10*SC,3*SC,5*SC);c.fillRect(17*SC,10*SC,3*SC,5*SC);pxs(c,[[8,4],[10,2],[12,4],[14,6],[18,5],[20,2],[22,4]],ac);}};
-var VOID_BOSS={draw:function(c,t){pxclr(c);var p=Math.sin(t*.18)>0,f=Math.floor(t/8)%4;c.fillStyle=p?'rgba(200,0,255,.16)':'rgba(50,0,150,.08)';c.fillRect(0,0,128,128);pxr(c,1,1,30,30,'#0a0022');pxr(c,2,2,29,29,'#1a0044');pxr(c,3,3,28,28,'#2a0066');var ec=['#ff00ff','#cc00ff','#aa44ff','#ff44ff'];pxr(c,5,8,12,16,ec[f%4]);pxr(c,19,8,26,16,ec[(f+2)%4]);c.fillStyle=p?'rgba(255,0,255,.8)':'rgba(150,0,255,.5)';c.fillRect(5*SC,8*SC,8*SC,9*SC);c.fillRect(19*SC,8*SC,8*SC,9*SC);px(c,9,9,'#fff');px(c,23,9,'#fff');pxr(c,5,17,26,19,'#0a0022');for(var x=5;x<=26;x+=2)px(c,x,17,'#ff00ff');pxr(c,0,5,3,14,'#1a0044');pxr(c,28,3,31,12,'#1a0044');if(p){c.strokeStyle='#ff00ff';c.lineWidth=2;c.strokeRect(1*SC,1*SC,30*SC,30*SC);}}};
-var ICE_WOLF={draw:function(c,t){pxclr(c);var f=Math.floor(t/10)%4,bo=(f===1||f===3)?1:0;pxr(c,8,12,22,24,'#ccddee');pxr(c,9,13,21,23,'#ddeeff');pxr(c,8,12,16,18,'#ccddee');pxr(c,16,10,22,14,'#aabbcc');pxr(c,17,11,21,13,'#88aacc');px(c,18,11,'#ff3300');px(c,20,11,'#ff3300');pxr(c,22,8,25,12,'#aabbcc');pxr(c,5,14+bo,8,20+bo,'#ccddee');pxr(c,22,20,28,24,'#ccddee');c.fillStyle='rgba(150,220,255,.3)';for(var i=0;i<5;i++)c.fillRect((6+i*4)*SC,(4+i)*SC,SC,SC);}};
-var FROST_GIANT={draw:function(c,t){pxclr(c);var f=Math.floor(t/18)%2,bo=f;pxr(c,7,8,24,28,'#8899bb');pxr(c,8,9,23,27,'#aabbdd');pxr(c,4,12+bo,8,22+bo,'#8899bb');pxr(c,23,12-bo,27,22-bo,'#8899bb');pxr(c,10,29,13,31,'#667799');pxr(c,18,29,21,31,'#667799');pxr(c,11,11,14,14,'#88ccff');pxr(c,17,11,20,14,'#88ccff');c.fillStyle='rgba(150,220,255,.7)';c.fillRect(11*SC,11*SC,4*SC,4*SC);c.fillRect(17*SC,11*SC,4*SC,4*SC);}};
-var ICE_BOSS={draw:function(c,t){pxclr(c);var p=Math.sin(t*.14)>0;c.fillStyle=p?'rgba(100,220,255,.14)':'rgba(50,100,200,.06)';c.fillRect(0,0,128,128);pxr(c,2,3,29,29,'#112244');pxr(c,3,4,28,28,'#1a3366');pxr(c,4,5,27,27,'#224488');pxr(c,7,6,24,14,'#aaccff');pxr(c,8,7,23,13,'#ccddff');pxr(c,9,8,14,12,'#88ccff');pxr(c,17,8,22,12,'#88ccff');c.fillStyle='rgba(100,220,255,.9)';c.fillRect(9*SC,8*SC,6*SC,5*SC);c.fillRect(17*SC,8*SC,6*SC,5*SC);px(c,11,9,'#fff');px(c,20,9,'#fff');var spikes=[[5,2],[10,1],[15,0],[20,1],[25,2],[3,6],[28,5]];for(var i=0;i<spikes.length;i++)pxr(c,spikes[i][0],spikes[i][1],spikes[i][0]+1,spikes[i][1]+4,p?'#aaddff':'#88bbcc');pxr(c,0,14,3,23,'#224488');pxr(c,28,12,31,21,'#224488');if(p){c.strokeStyle='#88ccff';c.lineWidth=2;c.strokeRect(2*SC,3*SC,28*SC,27*SC);}}};
-var LAVA_GOLEM={draw:function(c,t){pxclr(c);var f=Math.floor(t/12)%4,glow=f%2===0;c.fillStyle=glow?'rgba(255,80,0,.13)':'rgba(255,40,0,.06)';c.fillRect(0,0,128,128);pxr(c,9,8,22,28,'#441100');pxr(c,10,9,21,27,'#662200');pxr(c,11,10,20,26,'#883300');pxr(c,6,12,9,22,'#441100');pxr(c,22,12,25,22,'#441100');pxr(c,12,10,14,14,glow?'#ff4400':'#cc2200');pxr(c,17,10,19,14,glow?'#ff4400':'#cc2200');if(glow){c.fillStyle='rgba(255,80,0,.8)';c.fillRect(12*SC,10*SC,3*SC,5*SC);c.fillRect(17*SC,10*SC,3*SC,5*SC);}for(var ly=11;ly<=25;ly+=3)pxs(c,[[10,ly],[12,ly],[15,ly],[18,ly],[21,ly]],glow?'#ff6600':'#ff2200');}};
-var FIRE_DEMON={draw:function(c,t){pxclr(c);var f=Math.floor(t/8)%4,fl=f%2===0;c.fillStyle=fl?'rgba(255,100,0,.13)':'rgba(200,0,0,.08)';c.fillRect(0,0,128,128);pxr(c,10,12,21,28,'#880000');pxr(c,11,13,20,27,'#aa2200');pxr(c,7,14,10,24,'#880000');pxr(c,21,14,24,24,'#880000');pxr(c,12,29,15,31,'#660000');pxr(c,16,29,19,31,'#660000');pxr(c,11,8,20,13,'#cc3300');pxr(c,12,9,15,12,'#ff6600');pxr(c,17,9,20,12,'#ff6600');if(fl){c.fillStyle='rgba(255,150,0,.7)';c.fillRect(12*SC,9*SC,4*SC,4*SC);c.fillRect(17*SC,9*SC,4*SC,4*SC);}pxr(c,9,6,11,10,'#cc3300');pxr(c,20,5,22,9,'#cc3300');}};
-var MAGMA_BOSS={draw:function(c,t){pxclr(c);var p=Math.sin(t*.16)>0,f=Math.floor(t/5)%6;c.fillStyle=p?'rgba(255,100,0,.18)':'rgba(180,0,0,.12)';c.fillRect(0,0,128,128);pxr(c,1,2,30,30,'#1a0000');pxr(c,2,3,29,29,'#330000');pxr(c,3,4,28,28,'#550000');pxr(c,5,6,26,16,'#880000');pxr(c,7,8,24,14,'#cc3300');pxr(c,7,8,14,13,'#ff4400');pxr(c,17,8,24,13,'#ff4400');c.fillStyle=p?'rgba(255,100,0,.9)':'rgba(255,50,0,.7)';c.fillRect(7*SC,8*SC,8*SC,6*SC);c.fillRect(17*SC,8*SC,8*SC,6*SC);px(c,10,9,'#ffff00');px(c,21,9,'#ffff00');var eruptH=[0,1,2,1,0,2][f%6];pxr(c,12,3-eruptH,19,7-eruptH,'#ffaa00');if(p){c.strokeStyle='#ff4400';c.lineWidth=2;c.strokeRect(1*SC,2*SC,30*SC,29*SC);}}};
-
-// ═══════════════════════ BACKGROUND ═══════════════════════
-var bgType='void';
-(function(){
-  var cv=document.getElementById('bg-canvas'),cx=cv.getContext('2d');
-  function resize(){cv.width=window.innerWidth;cv.height=window.innerHeight;}
-  window.addEventListener('resize',resize);resize();
-  var S=[];for(var i=0;i<180;i++)S.push({x:Math.random()*3000,y:Math.random()*2000,r:Math.random()*1.2+.2,s:Math.random()*.4+.6,t:Math.random()*Math.PI*2});
-  var tick=0;
-  (function loop(){tick++;cx.clearRect(0,0,cv.width,cv.height);var w=cv.width,h=cv.height;
-    if(bgType==='grass'){var g=cx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#0a2015');g.addColorStop(1,'#0d3020');cx.fillStyle=g;cx.fillRect(0,0,w,h);for(var i=0;i<S.length;i++){var s=S[i];s.t+=.006*s.s;cx.fillStyle='rgba(100,255,150,'+(.12+.2*Math.abs(Math.sin(s.t)))+')';cx.beginPath();cx.arc(s.x%w,s.y%h,s.r*.6,0,Math.PI*2);cx.fill();}}
-    else if(bgType==='desert'){var g=cx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#1a0e00');g.addColorStop(1,'#2d1a00');cx.fillStyle=g;cx.fillRect(0,0,w,h);for(var i=0;i<S.length;i++){var s=S[i];s.t+=.006*s.s;cx.fillStyle='rgba(255,180,50,'+(.08+.16*Math.abs(Math.sin(s.t)))+')';cx.beginPath();cx.arc(s.x%w,s.y%h,s.r*.8,0,Math.PI*2);cx.fill();}}
-    else if(bgType==='ice'){var g=cx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#06182e');g.addColorStop(1,'#0a2244');cx.fillStyle=g;cx.fillRect(0,0,w,h);for(var i=0;i<S.length;i++){var s=S[i];s.t+=.009*s.s;cx.fillStyle='rgba(150,220,255,'+(.18+.35*Math.abs(Math.sin(s.t)))+')';cx.beginPath();cx.arc(s.x%w,s.y%h,s.r*.7,0,Math.PI*2);cx.fill();}}
-    else if(bgType==='magma'){var g=cx.createLinearGradient(0,0,0,h);g.addColorStop(0,'#1a0500');g.addColorStop(1,'#0d0000');cx.fillStyle=g;cx.fillRect(0,0,w,h);for(var i=0;i<S.length/2;i++){var s=S[i];s.y-=s.s*1.4;if(s.y<0)s.y=h;cx.fillStyle='rgba(255,'+(60+Math.floor(Math.sin(s.t+tick*.04)*50))+',0,'+(.15+.35*Math.abs(Math.sin(s.t+tick*.05)))+')';cx.beginPath();cx.arc(s.x%w,s.y,s.r*1.4,0,Math.PI*2);cx.fill();}}
-    else if(bgType==='boss'){cx.fillStyle='#0d0005';cx.fillRect(0,0,w,h);for(var i=0;i<S.length/2;i++){var s=S[i];s.y-=s.s*2;if(s.y<0)s.y=h;cx.fillStyle='rgba(255,20,70,'+(.2+.45*Math.abs(Math.sin(s.t+tick*.05)))+')';cx.beginPath();cx.arc(s.x%w,s.y,s.r*1.5,0,Math.PI*2);cx.fill();}}
-    else{cx.fillStyle='#06080f';cx.fillRect(0,0,w,h);for(var i=0;i<S.length;i++){var s=S[i];s.t+=.007*s.s;cx.fillStyle='rgba(150,200,255,'+(.18+.36*Math.abs(Math.sin(s.t)))+')';cx.beginPath();cx.arc(s.x%w,s.y%h,s.r,0,Math.PI*2);cx.fill();}}
-  requestAnimationFrame(loop);})();
-})();
-
-// ═══════════════════════ ANIM ENGINE ═══════════════════════
-var rafRunning=false,animTargets=[];
-function startLoop(){if(rafRunning)return;rafRunning=true;(function loop(){G_TICK++;for(var i=0;i<animTargets.length;i++){var a=animTargets[i];a.tick++;a.def.draw(a.ctx,a.tick);}requestAnimationFrame(loop);})();}
-function HDAnimator(cid,def){this.cvs=document.getElementById(cid);if(!this.cvs)return;this.cvs.width=128;this.cvs.height=128;this.ctx=this.cvs.getContext('2d');this.def=def;this.entry={ctx:this.ctx,def:def,tick:0};}
-HDAnimator.prototype.start=function(){this.stop();animTargets.push(this.entry);startLoop();};
-HDAnimator.prototype.stop=function(){var i=animTargets.indexOf(this.entry);if(i>=0)animTargets.splice(i,1);};
-
-// ═══════════════════════ GAME DATA ═══════════════════════
-var SAVE_KEY='voidtactics_v7';
-var gameData={coin:0,core:0,dust:0,level:1,roster:{},stats:{kills:0,totalCoins:0,clears:{}}};
-var selectedCharId=null,selectedCharDef=null,curCharData=null;
-var eData={},bState={player:{buffs:[]},enemy:{buffs:[]}};
-var isPlayerTurn=false,pAnim=null,eAnim=null,battleLocked=false;
-var comboCount=0,isChallenge=false,currentBattleStage=1;
-
-// ▼▼▼ 必殺技: 1バトル1回制限フラグ ▼▼▼
-var ultUsedThisBattle = false;
-
-// ═══════════════════════ CHARACTER DEFS ═══════════════════════
-var CHARACTER_DEFS=[
-  {id:'luna',name:'ルナ',title:'MAGE GIRL',sprite:LUNA,color:'#cc66ff',baseHp:80,baseEp:80,baseAtk:18,baseDef:4,
-   desc:'高火力魔法少女。星の力を操る',statD:{hp:'★★☆',ep:'★★★★★',atk:'★★★★★'},
-   skills:['attack','magic_burst','mana_shield','starfall','ultimate_luna'],
-   cutscene:{bgColor:'#220044',textColor:'#cc66ff',subtitle:'STARLIGHT BREAKER',lines:['星が...','輝く...','全てを...','砕け！！']}},
-  {id:'gant',name:'ガント',title:'WARRIOR BOY',sprite:GANT,color:'#4488ee',baseHp:120,baseEp:45,baseAtk:14,baseDef:8,
-   desc:'バランス型の剣士。勇敢な魂',statD:{hp:'★★★★',ep:'★★☆',atk:'★★★★'},
-   skills:['attack','heavy','rally','heal_minor','ultimate_gant'],
-   cutscene:{bgColor:'#001133',textColor:'#4488ee',subtitle:'BRAVE SLASH',lines:['剣に...','誓う！','勇者の...','一撃！！']}},
-  {id:'fors',name:'フォルス',title:'IRON KNIGHT',sprite:FORS,color:'#aabbcc',baseHp:150,baseEp:30,baseAtk:11,baseDef:14,
-   desc:'鉄壁の重装甲騎士。盾の守護者',statD:{hp:'★★★★★',ep:'★☆☆',atk:'★★★'},
-   skills:['attack','shield_bash','defend','iron_wall','ultimate_fors'],
-   cutscene:{bgColor:'#001122',textColor:'#aabbcc',subtitle:'AEGIS GUARD',lines:['盾が...','世界を...','守る...','不落！！']}},
-  {id:'shadow',name:'シャドウ',title:'DARK WITCH',sprite:SHADOW,color:'#00ffaa',baseHp:90,baseEp:75,baseAtk:16,baseDef:5,
-   desc:'毒を操る謎の魔女。闇の化身',statD:{hp:'★★☆',ep:'★★★★',atk:'★★★★'},
-   skills:['attack','curse','poison','soul_drain','ultimate_shadow'],
-   cutscene:{bgColor:'#001a0d',textColor:'#00ffaa',subtitle:'ABYSS GATE',lines:['深淵が...','開く...','呪われよ...','滅べ！！']}},
-];
-
-// ═══════════════════════ SKILLS ═══════════════════════
-var SKILLS={
-  attack:       {name:'通常攻撃',   ep:0,  desc:'基本攻撃。コンボを積む', action:function(a,d,bs){var dmg=dealDmg(a,d,1.0,bs);addCombo();}},
-  heavy:        {name:'スマッシュ', ep:15, desc:'強力な一撃。高ダメージ',  action:function(a,d,bs){dealDmg(a,d,1.9,bs);}},
-  magic_burst:  {name:'マジックバースト',ep:20,desc:'魔法爆発。×2ダメ', action:function(a,d,bs){dealDmg(a,d,2.1,bs);}},
-  shield_bash:  {name:'シールドバッシュ',ep:10,desc:'攻撃+ATKダウン',   action:function(a,d,bs){dealDmg(a,d,1.3,bs);applyBuff(d,bs,'atk_down',2,'ATKダウン');}},
-  defend:       {name:'ガード体制', ep:12, desc:'防御バフ3ターン',       action:function(a,d,bs){applyBuff(a,bState.player,'def_up',3,'防御UP');}},
-  poison:       {name:'アシッドボム',ep:20,desc:'毒付与3ターン',         action:function(a,d,bs){applyBuff(d,bs,'poison',3,'毒');}},
-  curse:        {name:'ダークカース',ep:22,desc:'毒+ATKダウン',          action:function(a,d,bs){applyBuff(d,bs,'poison',3,'毒');applyBuff(d,bs,'atk_down',3,'ATKダウン');}},
-  mana_shield:  {name:'マナシールド',ep:18,desc:'防御+EP回収+15',        action:function(a,d,bs){applyBuff(a,bState.player,'def_up',3,'防御UP');curCharData.ep=Math.min(curCharData.maxEp,curCharData.ep+15);logMsg('EP +15 回収！','var(--cyan)');}},
-  heal_minor:   {name:'応急キット', ep:15, desc:'HP 28%回復',           action:function(a,d,bs){healHP(a,.28);}},
-  starfall:     {name:'スターフォール',ep:28,desc:'連続3ヒット',         action:function(a,d,bs){for(var i=0;i<3;i++){setTimeout((function(ii){return function(){if(eData.cur&&eData.cur.hp>0)dealDmg(a,d,0.65,bs);};})(i),i*180);addCombo();}}},
-  rally:        {name:'ラリーコール',ep:20,desc:'ATK+コンボ+3',          action:function(a,d,bs){applyBuff(a,bState.player,'atk_up',3,'ATKアップ');comboCount=Math.min(9,comboCount+3);updateComboUI();}},
-  iron_wall:    {name:'アイアンウォール',ep:22,desc:'超防御+HP回復小',   action:function(a,d,bs){applyBuff(a,bState.player,'def_up',4,'超防御UP');healHP(a,.15);}},
-  soul_drain:   {name:'ソウルドレイン',ep:25,desc:'攻撃+自分HP回復',    action:function(a,d,bs){var dmg=dealDmg(a,d,1.4,bs);if(typeof dmg==='number'){var heal=Math.floor(dmg*.5);a.hp=Math.min(a.maxHp,a.hp+heal);logMsg('HP +'+heal+' ドレイン！','var(--green)');}  }},
-  ultimate_luna:  {name:'スターライトブレイカー',ep:40,isUlt:true,action:function(a,d,bs){dealDmg(a,d,3.6,bs);}},
-  ultimate_gant:  {name:'ブレイブスラッシュ',    ep:30,isUlt:true,action:function(a,d,bs){dealDmg(a,d,2.6,bs);applyBuff(a,bState.player,'def_up',2,'防御UP');}},
-  ultimate_fors:  {name:'イージスガード',        ep:25,isUlt:true,action:function(a,d,bs){healHP(a,.65);applyBuff(a,bState.player,'def_up',4,'超防御UP');}},
-  ultimate_shadow:{name:'アビスゲート',          ep:35,isUlt:true,action:function(a,d,bs){dealDmg(a,d,2.3,bs);applyBuff(d,bs,'poison',5,'猛毒');}},
-};
-
-// ═══════════════════════ ZONES & ENEMIES ═══════════════════════
-var ZONES=[
-  {id:'grass',name:'GRASSLAND',emoji:'🌿',color:'#22aa44',
-   enemies:[{name:'ゴブリン',sprite:GOBLIN,baseHp:55,baseAtk:8},{name:'フォレストトロール',sprite:FOREST_TROLL,baseHp:80,baseAtk:11}],
-   boss:{name:'フォレストタイタン',sprite:GRASS_BOSS,baseHp:220,baseAtk:16}},
-  {id:'desert',name:'DESERT',emoji:'🏜',color:'#cc8833',
-   enemies:[{name:'サンドスコーピオン',sprite:SCORPION,baseHp:65,baseAtk:10},{name:'ミイラ兵',sprite:MUMMY,baseHp:90,baseAtk:13}],
-   boss:{name:'デザートファラオ',sprite:DESERT_BOSS,baseHp:260,baseAtk:19}},
-  {id:'void',name:'VOID SECTOR',emoji:'🌀',color:'#cc66ff',
-   enemies:[{name:'ヴォイドクリーパー',sprite:VOID_CREEPER,baseHp:75,baseAtk:12},{name:'シャドウスペクター',sprite:SHADOW_SPECTER,baseHp:95,baseAtk:15}],
-   boss:{name:'ヴォイドオーバーロード',sprite:VOID_BOSS,baseHp:300,baseAtk:22}},
-  {id:'ice',name:'ICE TUNDRA',emoji:'❄',color:'#88ddff',
-   enemies:[{name:'アイスウルフ',sprite:ICE_WOLF,baseHp:80,baseAtk:13},{name:'フロストジャイアント',sprite:FROST_GIANT,baseHp:110,baseAtk:16}],
-   boss:{name:'フロストドラゴン',sprite:ICE_BOSS,baseHp:340,baseAtk:24}},
-  {id:'magma',name:'MAGMA CORE',emoji:'🔥',color:'#ff5511',
-   enemies:[{name:'ラバゴーレム',sprite:LAVA_GOLEM,baseHp:95,baseAtk:15},{name:'ファイアデーモン',sprite:FIRE_DEMON,baseHp:115,baseAtk:18}],
-   boss:{name:'インフェルノソブリン',sprite:MAGMA_BOSS,baseHp:380,baseAtk:27}},
-];
-function getStageInfo(stage){var z=Math.floor((stage-1)/5)%ZONES.length,n=(stage-1)%5,isBoss=n===4;return{zone:ZONES[z],isBoss:isBoss,zoneIdx:z,inZone:n};}
-function getEnemyForStage(stage,challenge){
-  var info=getStageInfo(stage),z=info.zone,sc=Math.floor((stage-1)/5),hm=1+sc*0.32,am=1+sc*0.26,cm=challenge?1.5:1.0;
-  if(info.isBoss)return{name:z.boss.name,sprite:z.boss.sprite,isBoss:true,maxHp:Math.floor(z.boss.baseHp*hm*cm+(stage-1)*18),atk:Math.floor(z.boss.baseAtk*am*cm+(stage-1)*2.5)};
-  var pick=z.enemies[Math.floor(Math.random()*z.enemies.length)];
-  return{name:pick.name,sprite:pick.sprite,isBoss:false,maxHp:Math.floor(pick.baseHp*hm*cm+(stage-1)*14),atk:Math.floor(pick.baseAtk*am*cm+(stage-1)*2)};
-}
-
-// ═══════════════════════ EQUIPMENT SYSTEM ═══════════════════════
-var ITEM_POOL=[
-  {id:'wood_sword',  name:'木の剣',          slot:'weapon',icon:'🗡',rarity:'common',stats:{atk:3}},
-  {id:'iron_sword',  name:'アイアンソード',  slot:'weapon',icon:'⚔', rarity:'rare',  stats:{atk:7}},
-  {id:'magic_rod',   name:'魔法のロッド',    slot:'weapon',icon:'🪄',rarity:'rare',  stats:{atk:5,ep:10}},
-  {id:'void_blade',  name:'ヴォイドブレード',slot:'weapon',icon:'🌀',rarity:'epic',  stats:{atk:12,def:3}},
-  {id:'star_lance',  name:'スターランス',    slot:'weapon',icon:'✨',rarity:'legend',stats:{atk:18,ep:15}},
-  {id:'fire_axe',    name:'炎の斧',          slot:'weapon',icon:'🪓',rarity:'epic',  stats:{atk:14}},
-  {id:'frost_bow',   name:'氷結の弓',        slot:'weapon',icon:'🏹',rarity:'rare',  stats:{atk:8,def:2}},
-  {id:'luna_wand',   name:'月輝の魔杖',      slot:'weapon',icon:'🌙',rarity:'epic',  stats:{atk:10,ep:20},  charOnly:'luna'},
-  {id:'luna_staff',  name:'スターロッド',    slot:'weapon',icon:'⭐',rarity:'legend',stats:{atk:15,ep:30},  charOnly:'luna'},
-  {id:'gant_blade',  name:'勇者の大剣',      slot:'weapon',icon:'🗡',rarity:'epic',  stats:{atk:16,hp:20},  charOnly:'gant'},
-  {id:'gant_blade2', name:'ブレイブエッジ',  slot:'weapon',icon:'⚔', rarity:'legend',stats:{atk:22,hp:30,def:4},charOnly:'gant'},
-  {id:'fors_shield', name:'イージスの盾',    slot:'weapon',icon:'🛡',rarity:'epic',  stats:{def:14,hp:25},  charOnly:'fors'},
-  {id:'fors_lance',  name:'聖銀の槍',        slot:'weapon',icon:'⚡',rarity:'legend',stats:{def:18,hp:40,atk:8},charOnly:'fors'},
-  {id:'shadow_dagger',name:'毒牙のダガー',   slot:'weapon',icon:'🗡',rarity:'epic',  stats:{atk:11,ep:15},  charOnly:'shadow'},
-  {id:'shadow_tome', name:'禁断の魔導書',    slot:'weapon',icon:'📖',rarity:'legend',stats:{atk:14,ep:28},  charOnly:'shadow'},
-  {id:'cloth',       name:'布の鎧',          slot:'armor', icon:'👘',rarity:'common',stats:{hp:20,def:2}},
-  {id:'iron_armor',  name:'アイアンアーマー',slot:'armor', icon:'🛡',rarity:'rare',  stats:{hp:40,def:6}},
-  {id:'rune_vest',   name:'ルーンベスト',    slot:'armor', icon:'🧥',rarity:'rare',  stats:{hp:30,ep:15}},
-  {id:'void_plate',  name:'ヴォイドプレート',slot:'armor', icon:'🔵',rarity:'epic',  stats:{hp:60,def:10}},
-  {id:'dragon_mail', name:'ドラゴンメイル',  slot:'armor', icon:'🐉',rarity:'legend',stats:{hp:80,def:14,atk:5}},
-  {id:'shadow_cloak',name:'シャドウクローク',slot:'armor', icon:'🌑',rarity:'epic',  stats:{hp:45,def:8,ep:20}},
-  {id:'luna_robe',   name:'星月の法衣',      slot:'armor', icon:'💜',rarity:'epic',  stats:{hp:35,ep:25,def:4},charOnly:'luna'},
-  {id:'gant_armor',  name:'ライオンアーマー',slot:'armor', icon:'🦁',rarity:'epic',  stats:{hp:55,def:10,atk:4},charOnly:'gant'},
-  {id:'fors_plate',  name:'鋼鉄の要塞鎧',   slot:'armor', icon:'⚙', rarity:'epic',  stats:{hp:70,def:16},  charOnly:'fors'},
-  {id:'shadow_suit', name:'夜影の忍装束',    slot:'armor', icon:'🖤',rarity:'epic',  stats:{hp:40,ep:20,def:6},charOnly:'shadow'},
-  {id:'ring',        name:'銀の指輪',        slot:'acc',   icon:'💍',rarity:'common',stats:{ep:15}},
-  {id:'amulet',      name:'魔法のアミュレット',slot:'acc', icon:'🔮',rarity:'rare',  stats:{ep:20,hp:15}},
-  {id:'void_core_acc',name:'ヴォイドコア',   slot:'acc',   icon:'💎',rarity:'epic',  stats:{atk:5,ep:25,hp:20}},
-  {id:'star_gem',    name:'スタージェム',    slot:'acc',   icon:'⭐',rarity:'legend',stats:{atk:8,ep:30,hp:30,def:5}},
-  {id:'poison_vial', name:'毒薬瓶',          slot:'acc',   icon:'⚗', rarity:'rare',  stats:{ep:15,atk:4}},
-  {id:'lava_stone',  name:'溶岩石',          slot:'acc',   icon:'🪨',rarity:'rare',  stats:{hp:25,atk:4}},
-  {id:'luna_brooch', name:'星降るブローチ',  slot:'acc',   icon:'🌟',rarity:'epic',  stats:{ep:30,atk:6},   charOnly:'luna'},
-  {id:'gant_ring',   name:'勇者の誓指輪',    slot:'acc',   icon:'💛',rarity:'epic',  stats:{atk:9,hp:25},   charOnly:'gant'},
-  {id:'fors_seal',   name:'鉄壁の紋章',      slot:'acc',   icon:'🔷',rarity:'epic',  stats:{def:12,hp:30},  charOnly:'fors'},
-  {id:'shadow_mask', name:'闇の仮面',         slot:'acc',   icon:'🎭',rarity:'epic',  stats:{ep:22,atk:7,def:3},charOnly:'shadow'},
-];
-var RARITY_WEIGHTS={common:50,rare:30,epic:15,legend:5};
-var RARITY_COLOR={common:'#aaa',rare:'#4499ff',epic:'#cc66ff',legend:'#ffd84d'};
-var RARITY_DUST={common:1,rare:2,epic:4,legend:10};
-
-function rollItem(minRarity,charId){
-  var pool=ITEM_POOL.filter(function(i){return !i.charOnly||i.charOnly===(charId||selectedCharId);});
-  if(minRarity==='rare')pool=pool.filter(function(i){return i.rarity!=='common';});
-  var total=pool.reduce(function(sum,i){var w=RARITY_WEIGHTS[i.rarity];return sum+(i.charOnly?w*1.4:w);},0);
-  var r=Math.random()*total;var acc=0;
-  for(var i=0;i<pool.length;i++){acc+=i.charOnly?RARITY_WEIGHTS[pool[i].rarity]*1.4:RARITY_WEIGHTS[pool[i].rarity];if(r<acc)return JSON.parse(JSON.stringify(pool[i]));}
-  return JSON.parse(JSON.stringify(pool[0]));
-}
-function itemStatString(item){return Object.keys(item.stats).map(function(k){return k.toUpperCase()+'+'+item.stats[k];}).join(' ');}
-
-function getSharedInventory(){if(!gameData.inventory)gameData.inventory=[];return gameData.inventory;}
-
-function getEquipBonus(){
-  var bonus={atk:0,hp:0,ep:0,def:0};
-  if(!curCharData||!curCharData.equipped)return bonus;
-  var inv=getSharedInventory();
-  ['weapon','armor','acc'].forEach(function(slot){
-    var uid=curCharData.equipped[slot];if(!uid)return;
-    var item=inv.find(function(i){return i._uid===uid;});
-    if(!item)return;
-    Object.keys(item.stats).forEach(function(k){bonus[k]=(bonus[k]||0)+item.stats[k];});
-  });
-  return bonus;
-}
-
-function getItemEquippedByOther(uid){
-  var others=null;
-  Object.keys(gameData.roster).forEach(function(cid){
-    if(cid===selectedCharId)return;
-    var r=gameData.roster[cid];if(!r.equipped)return;
-    if(Object.values(r.equipped).indexOf(uid)>=0)others=cid;
-  });
-  return others;
-}
-
-function addToInventory(item){
-  var inv=getSharedInventory();
-  item._uid=Date.now()+'_'+Math.floor(Math.random()*10000);
-  inv.push(item);
-}
-
-function equipItem(uid){
-  var inv=getSharedInventory();
-  var item=inv.find(function(i){return i._uid===uid;});if(!item)return;
-  if(item.charOnly&&item.charOnly!==selectedCharId){
-    var ownerDef=CHARACTER_DEFS.find(function(c){return c.id===item.charOnly;});
-    showToast('⚠ '+item.name+' は '+(ownerDef?ownerDef.name:'他キャラ')+'専用装備です');return;
-  }
-  var otherCid=getItemEquippedByOther(uid);
-  if(otherCid){
-    var otherDef=CHARACTER_DEFS.find(function(c){return c.id===otherCid;});
-    showToast('⚠ '+(otherDef?otherDef.name:'他キャラ')+'が装備中です。先に外してください');return;
-  }
-  if(!curCharData.equipped)curCharData.equipped={weapon:null,armor:null,acc:null};
-  curCharData.equipped[item.slot]=uid;
-  recalcStats();saveGame();renderEquipTab();renderHubStatus();
-  showToast('🗡 '+item.name+' を装備した！');
-}
-
-function unequipSlot(slot){
-  if(!curCharData.equipped)return;
-  curCharData.equipped[slot]=null;
-  recalcStats();saveGame();renderEquipTab();renderHubStatus();
-}
-
-function disassembleItem(uid){
-  var inv=getSharedInventory();
-  var item=inv.find(function(i){return i._uid===uid;});if(!item)return;
-  if(curCharData.equipped&&Object.values(curCharData.equipped).indexOf(uid)>=0){showToast('装備中は分解できません');return;}
-  var otherCid=getItemEquippedByOther(uid);
-  if(otherCid){var otherDef=CHARACTER_DEFS.find(function(c){return c.id===otherCid;});showToast('⚠ '+(otherDef?otherDef.name:'他キャラ')+'が装備中のため分解できません');return;}
-  var dust=RARITY_DUST[item.rarity]||1;
-  var rarityNames={common:'コモン',rare:'レア',epic:'エピック',legend:'レジェンド'};
-  showConfirm('⚠','装備を分解しますか？','【'+item.icon+' '+item.name+'】\n'+(item.charOnly?'★キャラ専用 ':'')+'['+rarityNames[item.rarity]+']\n'+itemStatString(item)+'\n\n分解すると🔮ダスト×'+dust+'になります。\nこの操作は元に戻せません！','var(--magenta)',function(){
-    var idx=inv.findIndex(function(i){return i._uid===uid;});
-    if(idx<0)return;
-    inv.splice(idx,1);gameData.dust+=dust;saveGame();renderEquipTab();updateHubHeader();
-    showToast('🔮 '+item.name+' → ダスト×'+dust);
-  });
-}
-
-function forgeItem(){
-  var cost=3;if(gameData.dust<cost){showToast('🔮 ダストが不足しています');return;}
-  var inv=getSharedInventory();if(inv.length>=40){showToast('倉庫がいっぱいです(最大40)');return;}
-  gameData.dust-=cost;var item=rollItem('rare');addToInventory(item);saveGame();updateHubHeader();renderEquipTab();
-  showDropPopup(item,function(){});
-}
-
-// ── 確認ダイアログ ──
-function showConfirm(icon,title,body,accentColor,onOk,okLabel){
-  var overlay=document.createElement('div');overlay.className='confirm-overlay';
-  var color=accentColor||'var(--magenta)';var label=okLabel||'実行する';
-  overlay.innerHTML='<div class="confirm-box" style="border-color:'+color+'"><div class="confirm-icon">'+icon+'</div><div class="confirm-title" style="color:'+color+'">'+title+'</div><div class="confirm-body" style="white-space:pre-line;">'+body+'</div><div class="confirm-btns"><button class="btn" style="border-color:'+color+';color:'+color+';" id="conf-ok">'+label+'</button><button class="btn back" id="conf-cancel">キャンセル</button></div></div>';
-  document.body.appendChild(overlay);
-  document.getElementById('conf-ok').addEventListener('click',function(){overlay.remove();onOk();});
-  document.getElementById('conf-cancel').addEventListener('click',function(){overlay.remove();});
-}
-
-// ═══════════════════════ SKILL LEVELS ═══════════════════════
-function getSkillLevel(sid){return(curCharData.skillLevels&&curCharData.skillLevels[sid])||0;}
-function getSkillMult(sid){return 1+getSkillLevel(sid)*0.15;}
-function getSkillUpgradeCost(sid){return 60+(getSkillLevel(sid)*35);}
-function upgradeSkill(sid){
-  var lv=getSkillLevel(sid);if(lv>=5){showToast('最大レベルです');return;}
-  var cost=getSkillUpgradeCost(sid);if(gameData.coin<cost){showToast('コインが不足しています');return;}
-  gameData.coin-=cost;if(!curCharData.skillLevels)curCharData.skillLevels={};
-  curCharData.skillLevels[sid]=(curCharData.skillLevels[sid]||0)+1;
-  saveGame();renderSkillTab();updateHubHeader();showToast('✨ '+SKILLS[sid].name+' Lv.'+(lv+1)+'！');
-}
-
-// ═══════════════════════ ACHIEVEMENTS ═══════════════════════
-var ACHIEVEMENTS=[
-  {id:'first_win', name:'初勝利',     icon:'⚔', desc:'このキャラで初めてクリア', target:1,   getValue:function(){return getCS('kills');}},
-  {id:'kills10',   name:'撃破10',     icon:'💀', desc:'敵を10体倒す',             target:10,  getValue:function(){return getCS('kills');}},
-  {id:'kills100',  name:'百戦錬磨',   icon:'🌟', desc:'敵を100体倒す',            target:100, getValue:function(){return getCS('kills');}},
-  {id:'kills500',  name:'殲滅者',     icon:'☠', desc:'敵を500体倒す',            target:500, getValue:function(){return getCS('kills');}},
-  {id:'coin100',   name:'コレクター', icon:'🪙', desc:'コイン100枚獲得',          target:100, getValue:function(){return getCS('totalCoins');}},
-  {id:'coin1000',  name:'大富豪',     icon:'💰', desc:'コイン1000枚獲得',         target:1000,getValue:function(){return getCS('totalCoins');}},
-  {id:'stage5',    name:'ゾーン1制覇',icon:'🌿', desc:'ステージ5をクリア',        target:5,   getValue:function(){return Math.max(0,gameData.level-1);}},
-  {id:'stage10',   name:'砂漠の勇者', icon:'🏜', desc:'ステージ10をクリア',       target:10,  getValue:function(){return Math.max(0,gameData.level-1);}},
-  {id:'stage25',   name:'虚空の征服者',icon:'🌀',desc:'全ステージクリア！',       target:25,  getValue:function(){return Math.max(0,gameData.level-1);}},
-  {id:'combo5',    name:'コンボマスター',icon:'🔥',desc:'コンボ5以上を達成',      target:1,   getValue:function(){return getCS('maxCombo')>=5?1:0;}},
-  {id:'challenge3',name:'チャレンジャー',icon:'⚡',desc:'チャレンジモード3回クリア',target:3, getValue:function(){return getCS('challengeClears');}},
-  {id:'equip3',    name:'装備マニア', icon:'🛡', desc:'3スロットを全て装備',      target:1,   getValue:function(){if(!curCharData||!curCharData.equipped)return 0;var e=curCharData.equipped;return(e.weapon&&e.armor&&e.acc)?1:0;}},
-  {id:'awaken',    name:'覚醒者',     icon:'💎', desc:'VOID AWAKENINGを解放',     target:1,   getValue:function(){return curCharData&&curCharData.awakened?1:0;}},
-  {id:'farm10',    name:'周回王',     icon:'🔄', desc:'同ステージ10回以上クリア', target:10,  getValue:function(){var m=0;Object.values(gameData.stats.clears||{}).forEach(function(v){if(v>m)m=v;});return m;}},
-  {id:'exclusive', name:'専用装備使い',icon:'🌙',desc:'キャラ専用装備を装備する', target:1,   getValue:function(){var inv=getSharedInventory();var eq=curCharData&&curCharData.equipped?curCharData.equipped:{};return['weapon','armor','acc'].some(function(s){var uid=eq[s];if(!uid)return false;var it=inv.find(function(i){return i._uid===uid;});return it&&it.charOnly===selectedCharId;})?1:0;}},
-];
-function getCS(key){return curCharData&&curCharData.charStats&&curCharData.charStats[key]||0;}
-function addCS(key,val){if(!curCharData)return;if(!curCharData.charStats)curCharData.charStats={};curCharData.charStats[key]=(curCharData.charStats[key]||0)+(val||1);}
-function checkAchievements(){
-  if(!curCharData)return;
-  if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
-  ACHIEVEMENTS.forEach(function(a){
-    if(curCharData.unlockedAchieves.indexOf(a.id)>=0)return;
-    var v=a.getValue();if(v>=a.target){curCharData.unlockedAchieves.push(a.id);showToast('🏆 実績解除: '+a.name);saveGame();}
-  });
-}
-function isAchieveUnlocked(id){return curCharData&&curCharData.unlockedAchieves&&curCharData.unlockedAchieves.indexOf(id)>=0;}
-
-// ═══════════════════════ RANK ═══════════════════════
-function getRank(){
-  var k=getCS('kills');
-  if(k>=500)return{name:'VOID SOVEREIGN',color:'#ff00ff'};
-  if(k>=200)return{name:'DARKNESS LORD',color:'#cc66ff'};
-  if(k>=100)return{name:'IRON GENERAL',color:'#ffd84d'};
-  if(k>=50) return{name:'BATTLE ACE',color:'#ff8833'};
-  if(k>=20) return{name:'FIELD AGENT',color:'#4499ff'};
-  if(k>=5)  return{name:'RECRUIT',color:'#44ffaa'};
-  return{name:'ROOKIE',color:'#667'};
-}
-
-// ═══════════════════════ SAVE / LOAD ═══════════════════════
-function saveGame(){
-  var key = getSaveKey();
-  gameData._savedAt = Date.now();
-  try{ localStorage.setItem(key, JSON.stringify({gameData:gameData,selectedCharId:selectedCharId})); }catch(e){}
-  var b=document.getElementById('save-status');if(b){b.textContent='💾 SAVED';b.style.color='#44ffaa';}
-  // クラウドにも保存
-  cloudSave();
-}
-
-function loadSaveFromKey(key){
-  try{
-    var raw=localStorage.getItem(key);if(!raw)return false;
-    var d=JSON.parse(raw);if(!d||!d.gameData)return false;
-    gameData=d.gameData;
-    if(!gameData.roster)    gameData.roster={};
-    if(!gameData.inventory) gameData.inventory=[];
-    if(!gameData.stats)     gameData.stats={kills:0,totalCoins:0,clears:{}};
-    Object.keys(gameData.roster).forEach(function(cid){
-      var r=gameData.roster[cid];
-      if(r.inventory&&r.inventory.length>0){r.inventory.forEach(function(item){gameData.inventory.push(item);});r.inventory=[];}
-      if(!r.charStats)r.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
-    });
-    selectedCharId=d.selectedCharId;return true;
-  }catch(e){return false;}
-}
-
-function loadSave(){
-  return loadSaveFromKey(getSaveKey());
-}
-
-function checkSaveOnStart(){
-  ['start-save-info','continue-btn','delete-btn'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-  var key = getSaveKey();
-  if(localStorage.getItem(key)){
-    document.getElementById('start-save-info').style.display='block';
-    document.getElementById('continue-btn').style.display='inline-block';
-    document.getElementById('delete-btn').style.display='inline-block';
-  }
-}
-
-function continueGame(){
-  if(!selectedCharId){switchScreen('charselect');return;}
-  selectedCharDef=CHARACTER_DEFS.find(function(c){return c.id===selectedCharId;});
-  if(!selectedCharDef){switchScreen('charselect');return;}
-  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[]};
-  curCharData=gameData.roster[selectedCharId];
-  if(!curCharData.charStats)curCharData.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
-  if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
-  recalcStats();switchScreen('hub');
-}
-
-function newGameConfirm(){
-  if(!localStorage.getItem(getSaveKey())){_startNewGame();return;}
-  showConfirm('⚠','既存データを上書きしますか？','セーブデータが上書きされます。\nこの操作は元に戻せません。','var(--orange)',function(){_startNewGame();});
-}
-function _startNewGame(){
-  gameData={coin:0,core:0,dust:0,level:1,roster:{},inventory:[],stats:{kills:0,totalCoins:0,clears:{}}};
-  selectedCharId=null;switchScreen('charselect');
-}
-function deleteSave(){
-  showConfirm('🗑','セーブデータを削除しますか？','この操作は元に戻せません。\n全てのデータが失われます。','var(--magenta)',function(){
-    localStorage.removeItem(getSaveKey());
-    if(firebaseReady&&fbDb&&accountInfo){fbDb.collection('saves').doc(accountInfo.uid).delete().catch(function(){});}
-    gameData={coin:0,core:0,dust:0,level:1,roster:{},inventory:[],stats:{kills:0,totalCoins:0,clears:{}}};
-    selectedCharId=null;
-    ['start-save-info','continue-btn','delete-btn'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display='none';});
-    showToast('🗑 セーブデータを削除しました');
-  });
-}
-
-// ═══════════════════════ SCREEN ═══════════════════════
-function switchScreen(id){
-  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
-  document.getElementById('screen-'+id).classList.add('active');
-  if(id==='start'){bgType='void';checkSaveOnStart();}
-  if(id==='hub'){bgType='void';updateHubUI();}
-  if(id==='map'){bgType='void';buildMap();}
-}
-
-// ═══════════════════════ CHAR SELECT ═══════════════════════
-function initCharSelect(){
-  var grid=document.getElementById('char-grid');grid.innerHTML='';
-  CHARACTER_DEFS.forEach(function(cd){
-    var card=document.createElement('div');card.className='char-card';card.id='cc-'+cd.id;card.style.borderColor=cd.color+'44';
-    var cvs=document.createElement('canvas');cvs.width=128;cvs.height=128;cvs.style.cssText='image-rendering:pixelated;image-rendering:crisp-edges;width:84px;height:84px;display:block;margin:0 auto 4px;';
-    card.appendChild(cvs);if(cd.sprite.id)initBlink(cd.sprite.id);cd.sprite.draw(cvs.getContext('2d'),0);
-    var info=document.createElement('div');
-    info.innerHTML='<div class="sel-badge">✓</div><div class="char-class-tag" style="color:'+cd.color+'">'+cd.title+'</div><div class="char-name-big" style="color:'+cd.color+'">'+cd.name+'</div><div class="char-flavor">'+cd.desc+'</div><div class="stat-row"><span>HP</span><span class="stat-val">'+cd.statD.hp+'</span></div><div class="stat-row"><span style="color:var(--cyan)">EP</span><span class="stat-val">'+cd.statD.ep+'</span></div><div class="stat-row"><span style="color:var(--magenta)">ATK</span><span class="stat-val">'+cd.statD.atk+'</span></div>';
-    card.appendChild(info);card.addEventListener('click',function(){selectChar(cd.id);});grid.appendChild(card);
-    animTargets.push({ctx:cvs.getContext('2d'),def:cd.sprite,tick:0});
-  });
-  startLoop();
-}
-function selectChar(id){
-  selectedCharId=id;document.querySelectorAll('.char-card').forEach(function(c){c.classList.remove('selected');});
-  var el=document.getElementById('cc-'+id);if(el)el.classList.add('selected');
-}
-function confirmCharSelect(){
-  if(!selectedCharId){alert('キャラクターを選んでください');return;}
-  selectedCharDef=CHARACTER_DEFS.find(function(c){return c.id===selectedCharId;});
-  if(!gameData.roster[selectedCharId])gameData.roster[selectedCharId]={upgrades:{hp:0,ep:0,atk:0,def:0},awakened:false,awakened2:false,skillLevels:{},equipped:{weapon:null,armor:null,acc:null},charStats:{kills:0,totalCoins:0,maxCombo:0,challengeClears:0},unlockedAchieves:[]};
-  curCharData=gameData.roster[selectedCharId];
-  if(!curCharData.charStats)curCharData.charStats={kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
-  if(!curCharData.unlockedAchieves)curCharData.unlockedAchieves=[];
-  recalcStats();saveGame();switchScreen('hub');
-}
-function recalcStats(){
-  var u=curCharData.upgrades||{};var eq=getEquipBonus();
-  var awk=(curCharData.awakened?1.15:1)*(curCharData.awakened2?1.2:1);
-  curCharData.maxHp =Math.floor((selectedCharDef.baseHp +(u.hp||0)*20+eq.hp)*awk);
-  curCharData.maxEp =Math.floor((selectedCharDef.baseEp +(u.ep||0)*10+eq.ep)*awk);
-  curCharData.atk   =Math.floor((selectedCharDef.baseAtk+(u.atk||0)*5 +eq.atk)*awk);
-  curCharData.def   =Math.floor((selectedCharDef.baseDef+(u.def||0)*4 +eq.def)*awk);
-  curCharData.hp=curCharData.maxHp;curCharData.ep=curCharData.maxEp;
-}
-function getUpgradeCost(type){var u=curCharData.upgrades||{};return type==='atk'?100+(u[type]||0)*45:type==='def'?80+(u[type]||0)*35:50+(u[type]||0)*22;}
-
-// ═══════════════════════ HUB UI ═══════════════════════
-function switchHubTab(tab){
-  ['status','shop','equip','skills','achieve'].forEach(function(t){
-    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
-    document.getElementById('tab-body-'+t).classList.toggle('active',t===tab);
-  });
-  if(tab==='equip')renderEquipTab();
-  if(tab==='skills')renderSkillTab();
-  if(tab==='achieve')renderAchieveTab();
-  if(tab==='status')renderHubStatus();
-}
-function updateHubHeader(){
-  document.getElementById('ui-coin').innerText=gameData.coin;
-  document.getElementById('ui-core').innerText=gameData.core;
-  document.getElementById('ui-dust').innerText=gameData.dust;
-}
-function updateHubUI(){
-  updateHubHeader();renderHubStatus();renderShopTab();renderEquipTab();renderSkillTab();renderAchieveTab();
-  var wrap=document.getElementById('hub-sprite-wrap');wrap.innerHTML='';
-  var cvs=document.createElement('canvas');cvs.width=128;cvs.height=128;cvs.style.cssText='image-rendering:pixelated;image-rendering:crisp-edges;width:100px;height:100px;';
-  wrap.appendChild(cvs);if(curCharData.awakened)cvs.classList.add('aura-active');
-  if(window._hubE){var idx=animTargets.indexOf(window._hubE);if(idx>=0)animTargets.splice(idx,1);}
-  window._hubE={ctx:cvs.getContext('2d'),def:selectedCharDef.sprite,tick:0};animTargets.push(window._hubE);startLoop();
-  switchHubTab('status');
-}
-function renderHubStatus(){
-  if(!curCharData||!selectedCharDef)return;
-  document.getElementById('hub-cname').innerText=selectedCharDef.name;
-  document.getElementById('hub-ctitle').innerText=selectedCharDef.title;
-  document.getElementById('hub-hp').innerText=curCharData.maxHp;
-  document.getElementById('hub-ep').innerText=curCharData.maxEp;
-  document.getElementById('hub-atk').innerText=curCharData.atk;
-  document.getElementById('hub-def').innerText=curCharData.def;
-  document.getElementById('hub-maxlv').innerText=gameData.level;
-  document.getElementById('hub-kills').innerText=getCS('kills');
-  document.getElementById('hub-totalcoin').innerText=getCS('totalCoins');
-  var rank=getRank();var rb=document.getElementById('hub-rank-badge');
-  rb.innerText=rank.name;rb.style.color=rank.color;rb.style.borderColor=rank.color;rb.style.border='1px solid';rb.style.background=rank.color+'22';
-  var gs=document.getElementById('hub-gear-summary');if(!gs)return;gs.innerHTML='';
-  var inv=getSharedInventory();
-  ['weapon','armor','acc'].forEach(function(slot){
-    var icons={'weapon':'🗡','armor':'🛡','acc':'💍'};
-    var uid=curCharData.equipped&&curCharData.equipped[slot];
-    var item=uid?inv.find(function(i){return i._uid===uid;}):null;
-    var div=document.createElement('div');div.style.cssText='display:flex;justify-content:space-between;font-size:10px;padding:1px 0;';
-    div.innerHTML='<span style="color:#445;">'+icons[slot]+' '+slot.toUpperCase()+'</span><span style="color:'+(item?RARITY_COLOR[item.rarity]:'#223')+';">'+(item?item.name:'なし')+'</span>';
-    gs.appendChild(div);
-  });
-}
-function renderShopTab(){
-  var u=curCharData.upgrades||{};
-  ['hp','ep','atk','def'].forEach(function(t){
-    var el=document.getElementById('shop-lv-'+t);if(el)el.innerText='Lv.'+(u[t]||0);
-    var ce=document.getElementById('cost-'+t);if(ce)ce.innerText=getUpgradeCost(t);
-  });
-  document.getElementById('btn-buy-awk').disabled=curCharData.awakened;
-  document.getElementById('btn-buy-awk2').disabled=!curCharData.awakened||curCharData.awakened2;
-  document.getElementById('forge-cost').innerText=3;
-}
-function renderEquipTab(){
-  if(!curCharData)return;
-  if(!curCharData.equipped)curCharData.equipped={weapon:null,armor:null,acc:null};
-  var inv=getSharedInventory();
-  var slots=document.getElementById('equip-slots');slots.innerHTML='';
-  var slotDefs=[{id:'weapon',name:'ウェポン',icon:'🗡'},{id:'armor',name:'アーマー',icon:'🛡'},{id:'acc',name:'アクセサリ',icon:'💍'}];
-  slotDefs.forEach(function(sd){
-    var uid=curCharData.equipped[sd.id];
-    var item=uid?inv.find(function(i){return i._uid===uid;}):null;
-    var div=document.createElement('div');div.className='equip-slot'+(item?' has-item':'');
-    if(item){
-      div.style.borderColor=RARITY_COLOR[item.rarity];
-      div.innerHTML='<div class="slot-icon">'+item.icon+'</div>'+(item.charOnly?'<div style="font-size:8px;color:var(--gold);font-weight:700;">★専用</div>':'')+'<div class="item-name" style="color:'+RARITY_COLOR[item.rarity]+'">'+item.name+'</div>'+'<div class="item-stat" style="color:var(--gold);">'+itemStatString(item)+'</div>'+'<div class="slot-name" style="margin-top:3px;cursor:pointer;color:var(--magenta);" onclick="unequipSlot(\''+sd.id+'\')">[ 外す ]</div>';
-    } else {
-      div.innerHTML='<div class="slot-icon" style="opacity:.3;">'+sd.icon+'</div><div class="slot-name">'+sd.name+'</div><div style="font-size:8px;color:#223;">インベントリから装備</div>';
-    }
-    slots.appendChild(div);
-  });
-  var grid=document.getElementById('inventory-grid');grid.innerHTML='';
-  var emptyEl=document.getElementById('inv-empty');
-  emptyEl.style.display=inv.length===0?'block':'none';
-  document.getElementById('inv-count').innerText='('+inv.length+'/40)';
-  inv.forEach(function(item){
-    var myEq=curCharData.equipped&&Object.values(curCharData.equipped).indexOf(item._uid)>=0;
-    var otherCid=getItemEquippedByOther(item._uid);
-    var isExclusive=!!item.charOnly;
-    var canEquip=!isExclusive||(item.charOnly===selectedCharId);
-    var otherDef=otherCid?CHARACTER_DEFS.find(function(c){return c.id===otherCid;}):null;
-    var div=document.createElement('div');div.className='inv-item'+(myEq?' equipped':'');
-    if(otherCid)div.style.opacity='0.45';
-    if(isExclusive&&!canEquip)div.style.opacity='0.3';
-    var label='';
-    if(myEq)label='<div style="font-size:8px;color:var(--gold);margin-top:1px;">✓ 装備中</div>';
-    else if(otherCid)label='<div style="font-size:8px;color:var(--magenta);margin-top:1px;">'+(otherDef?otherDef.name:'他キャラ')+'使用中</div>';
-    else if(isExclusive&&!canEquip){var ownerDef=CHARACTER_DEFS.find(function(c){return c.id===item.charOnly;});label='<div style="font-size:8px;color:#556;margin-top:1px;">'+(ownerDef?ownerDef.name:'他キャラ')+'専用</div>';}
-    else label='<div style="font-size:8px;color:#445;margin-top:2px;display:flex;gap:4px;justify-content:center;"><span style="cursor:pointer;color:var(--cyan);" onclick="equipItem(\''+item._uid+'\')">装備</span><span style="cursor:pointer;color:var(--magenta);" onclick="disassembleItem(\''+item._uid+'\')">分解</span></div>';
-    div.innerHTML='<div class="inv-icon">'+item.icon+'</div>'+(item.charOnly?'<div style="font-size:7px;color:var(--gold);font-weight:700;line-height:1;">★専用</div>':'')+'<div class="inv-name" style="color:'+RARITY_COLOR[item.rarity]+'">'+item.name+'</div>'+'<div class="inv-stats">'+itemStatString(item)+'</div>'+label;
-    if(myEq){div.addEventListener('click',function(){unequipSlot(Object.keys(curCharData.equipped).find(function(s){return curCharData.equipped[s]===item._uid;}));});}
-    grid.appendChild(div);
-  });
-}
-function renderSkillTab(){
-  var list=document.getElementById('skill-upgrade-list');list.innerHTML='';
-  if(!selectedCharDef)return;
-  selectedCharDef.skills.forEach(function(sid){
-    var sk=SKILLS[sid];var lv=getSkillLevel(sid);var cost=getSkillUpgradeCost(sid);
-    var row=document.createElement('div');row.className='skill-upgrade-row';
-    var pips='';for(var i=0;i<5;i++)pips+='<div class="skill-lv-pip'+(i<lv?' filled':'')+'"></div>';
-    row.innerHTML='<div style="flex:1;"><div style="font-weight:700;font-size:12px;color:'+(sk.isUlt?'var(--gold)':'var(--cyan)')+'">'+sk.name+(sk.isUlt?' <span style="font-size:9px;color:var(--orange);">[必殺技・1回/バトル]</span>':'')+'</div><div style="font-size:9px;color:#556;">'+sk.desc+'</div><div class="skill-lv-bar">'+pips+'</div><div style="font-size:9px;color:#778;">倍率: ×'+getSkillMult(sid).toFixed(2)+(lv<5?' → ×'+(1+(lv+1)*0.15).toFixed(2):'【MAX】')+'</div></div>';
-    if(lv<5){var btn=document.createElement('button');btn.className='btn sm';btn.innerHTML='🪙 '+cost;btn.addEventListener('click',function(){upgradeSkill(sid);});row.appendChild(btn);}
-    else{var maxSpan=document.createElement('span');maxSpan.style.cssText='font-size:10px;color:var(--gold);font-weight:900;';maxSpan.innerText='MAX';row.appendChild(maxSpan);}
-    list.appendChild(row);
-  });
-}
-function renderAchieveTab(){
-  var grid=document.getElementById('achieve-grid');grid.innerHTML='';
-  ACHIEVEMENTS.forEach(function(a){
-    var unlocked=isAchieveUnlocked(a.id);var val=a.getValue();var pct=Math.min(1,val/a.target);
-    var card=document.createElement('div');card.className='achieve-card'+(unlocked?' unlocked':'');
-    card.innerHTML='<div class="achieve-icon"'+(unlocked?'':' style="filter:grayscale(1);opacity:.3;"')+'>'+a.icon+'</div><div><div class="achieve-name" style="color:'+(unlocked?'var(--gold)':'#445')+'">'+a.name+'</div><div class="achieve-desc">'+a.desc+'</div><div class="achieve-prog">'+(unlocked?'✅ UNLOCKED':val+' / '+a.target)+'</div><div class="prog-bar"><div class="prog-fill" style="width:'+(pct*100)+'%"></div></div></div>';
-    grid.appendChild(card);
-  });
-}
-
-function buyUpgrade(type){
-  var cost=getUpgradeCost(type);if(gameData.coin<cost){showToast('コインが不足');return;}
-  gameData.coin-=cost;if(!curCharData.upgrades)curCharData.upgrades={};
-  curCharData.upgrades[type]=(curCharData.upgrades[type]||0)+1;recalcStats();saveGame();renderShopTab();renderHubStatus();updateHubHeader();showToast('✅ '+type.toUpperCase()+' 強化完了！');
-}
-function buyVoidAwaken(){if(curCharData.awakened)return;if(gameData.core<3){showToast('💎 コアが不足');return;}gameData.core-=3;curCharData.awakened=true;recalcStats();saveGame();renderShopTab();renderHubStatus();updateHubHeader();showToast('🌟 VOID AWAKENING！');}
-function buyVoidAwaken2(){if(!curCharData.awakened||curCharData.awakened2)return;if(gameData.core<8){showToast('💎 コアが不足');return;}gameData.core-=8;curCharData.awakened2=true;recalcStats();saveGame();renderShopTab();renderHubStatus();updateHubHeader();showToast('💥 SECOND AWAKENING！');}
-
-// ═══════════════════════ MAP ═══════════════════════
-function buildMap(){
-  document.getElementById('map-coin').innerText=gameData.coin;
-  var body=document.getElementById('map-body');body.innerHTML='';
-  for(var z=0;z<ZONES.length;z++){
-    var zone=ZONES[z],zStart=z*5+1,zEnd=z*5+5;
-    var block=document.createElement('div');block.className='zone-block';block.style.borderColor=zone.color+'22';
-    var hdr=document.createElement('div');hdr.className='zone-header';
-    hdr.style.background='linear-gradient(90deg,'+zone.color+'1a,transparent)';hdr.style.color=zone.color;
-    hdr.innerHTML='<span style="font-size:15px;">'+zone.emoji+'</span><span>ZONE '+(z+1)+': '+zone.name+'</span>';
-    block.appendChild(hdr);
-    var row=document.createElement('div');row.className='zone-stages';
-    for(var s=zStart;s<=zEnd;s++){
-      if(s>zStart){var line=document.createElement('div');line.className='stage-line';line.style.background=s<=gameData.level?zone.color+'55':'#1a2040';row.appendChild(line);}
-      var node=document.createElement('div');node.className='stage-node';
-      var isBoss=(s-1)%5===4,isDone=s<gameData.level,isCurrent=s===gameData.level,isLocked=s>gameData.level;
-      var clears=(gameData.stats.clears&&gameData.stats.clears[s])||0;
-      var circle=document.createElement('div');circle.className='stage-circle'+(isBoss?' boss':'')+(isCurrent?' current':'')+(isLocked?' locked':'');
-      circle.style.borderColor=isBoss?'var(--gold)':zone.color;circle.style.color=isBoss?'var(--gold)':zone.color;
-      if(isDone||isCurrent)circle.style.background=zone.color+'22';
-      var sn=document.createElement('span');sn.className='sn';sn.innerText=isDone?'✓':s;circle.appendChild(sn);
-      var lbl=document.createElement('div');lbl.className='stage-label';lbl.style.color=isBoss?'var(--gold)':zone.color;lbl.innerText=isBoss?'BOSS':'Lv.'+s;
-      var clrSpan=document.createElement('div');clrSpan.className='stage-clears';clrSpan.innerText=clears>0?'×'+clears:'';
-      node.appendChild(circle);node.appendChild(lbl);node.appendChild(clrSpan);
-      if(!isLocked){
-        (function(stg,cir){
-          cir.addEventListener('click',function(e){e.stopPropagation();startBattle(stg,false);});
-          var pressTimer=null;
-          cir.addEventListener('touchstart',function(){pressTimer=setTimeout(function(){startBattle(stg,true);},600);});
-          cir.addEventListener('touchend',function(){clearTimeout(pressTimer);});
-          cir.addEventListener('dblclick',function(){startBattle(stg,true);});
-          if(clears>0&&!isBoss){var cb=document.createElement('div');cb.className='challenge-badge';cb.innerText='CH';cir.appendChild(cb);}
-        })(s,circle);
-      }
-      row.appendChild(node);
-    }
-    block.appendChild(row);body.appendChild(block);
-  }
-  var hint=document.createElement('div');
-  hint.style.cssText='text-align:center;padding:10px;font-size:10px;color:#334;';
-  hint.innerText='💡 クリア済みステージは周回可能 | ダブルタップ/長押し = チャレンジモード (+50%報酬)';
-  body.appendChild(hint);
-}
-
-// ═══════════════════════ BATTLE ═══════════════════════
-function startBattle(stage,challenge){
-  currentBattleStage=stage;isChallenge=!!challenge;
-  curCharData.hp=curCharData.maxHp;curCharData.ep=curCharData.maxEp;
-  bState={player:{buffs:[]},enemy:{buffs:[]}};battleLocked=false;comboCount=0;
-  // ▼▼▼ 必殺技リセット ▼▼▼
-  ultUsedThisBattle = false;
-  var info=getStageInfo(stage);var zone=info.zone;
-  bgType=info.isBoss?'boss':zone.id;
-  var eInfo=getEnemyForStage(stage,isChallenge);
-  eData.cur={name:eInfo.name,maxHp:eInfo.maxHp,hp:eInfo.maxHp,atk:eInfo.atk,spriteDef:eInfo.sprite,isBoss:eInfo.isBoss};
-  document.getElementById('stage-name-txt').innerText='STAGE '+stage+': '+zone.name+(info.isBoss?' [BOSS]':'');
-  document.getElementById('challenge-banner').classList.toggle('show',isChallenge);
-  if(info.isBoss){document.getElementById('vs-label').innerHTML='<div class="boss-warning">⚠BOSS⚠</div>VS';document.getElementById('enemy-card').style.borderColor='red';}
-  else{document.getElementById('vs-label').innerHTML='VS';document.getElementById('enemy-card').style.borderColor='rgba(255,51,153,.45)';}
-  document.getElementById('log-panel').innerHTML='';
-  logMsg((info.isBoss?'⚠ BOSS: ':'')+'【'+eData.cur.name+'】'+(isChallenge?' [チャレンジ]':'')+' 出現！',info.isBoss?'#ff3333':zone.color);
-  buildCmds();switchScreen('battle');
-  document.getElementById('player-card').style.borderColor=selectedCharDef.color+'88';
-  document.getElementById('b-pname').innerText=selectedCharDef.name;
-  document.getElementById('b-pname').style.color=selectedCharDef.color;
-  renderBattleEquipTags();
-  if(pAnim)pAnim.stop();if(eAnim)eAnim.stop();
-  pAnim=new HDAnimator('player-sprite',selectedCharDef.sprite);eAnim=new HDAnimator('enemy-sprite',eData.cur.spriteDef);
-  if(curCharData.awakened)document.getElementById('player-sprite').classList.add('aura-active');
-  else document.getElementById('player-sprite').classList.remove('aura-active');
-  pAnim.start();eAnim.start();updateBUI();updateComboUI();isPlayerTurn=true;
-}
-function renderBattleEquipTags(){
-  var row=document.getElementById('b-equip-tags');if(!row)return;row.innerHTML='';
-  var eq=getEquipBonus();
-  if(eq.atk)row.innerHTML+='<span class="b-equip-tag">ATK+'+eq.atk+'</span>';
-  if(eq.hp)row.innerHTML+='<span class="b-equip-tag">HP+'+eq.hp+'</span>';
-  if(eq.def)row.innerHTML+='<span class="b-equip-tag">DEF+'+eq.def+'</span>';
-  if(eq.ep)row.innerHTML+='<span class="b-equip-tag">EP+'+eq.ep+'</span>';
-}
-function retreatBattle(){
-  showConfirm('🏳','撤退しますか？','現在の戦闘を中断してマップに戻ります。\nクリア報酬は獲得できません。','#667',function(){
-    if(pAnim)pAnim.stop();if(eAnim)eAnim.stop();saveGame();switchScreen('map');
-  });
-}
-
-function buildCmds(){
-  var pnl=document.getElementById('cmd-panel');pnl.innerHTML='';
-  selectedCharDef.skills.forEach(function(sid){
-    var sk=SKILLS[sid];var lv=getSkillLevel(sid);
-    var b=document.createElement('button');b.className='btn skill-btn';if(sk.isUlt)b.classList.add('skill-ult');
-    b.dataset.sid=sid;
-    b.innerHTML=sk.name+'<span style="opacity:.5;font-size:8px;margin-left:3px;">EP:'+sk.ep+(lv>0?' Lv.'+lv:'')+''+(sk.isUlt?' ★1回':'')+'</span>';
-    b.addEventListener('click',function(){execPlayerTurn(sid);});
-    pnl.appendChild(b);
-  });
-}
-
-function updateBUI(){
-  document.getElementById('battle-coin').innerText=gameData.coin;
-  document.getElementById('p-hp-txt').innerText=Math.floor(curCharData.hp);document.getElementById('p-maxhp').innerText=curCharData.maxHp;
-  document.getElementById('p-ep-txt').innerText=Math.floor(curCharData.ep);document.getElementById('p-maxep').innerText=curCharData.maxEp;
-  document.getElementById('e-hp-txt').innerText=Math.floor(eData.cur.hp);document.getElementById('e-maxhp').innerText=eData.cur.maxHp;
-  document.getElementById('b-ename').innerText=eData.cur.name;
-  var pHp=curCharData.hp/curCharData.maxHp*100,pEp=curCharData.ep/curCharData.maxEp*100,eHp=eData.cur.hp/eData.cur.maxHp*100;
-  document.getElementById('p-hp-bar').style.width=Math.max(0,pHp)+'%';
-  document.getElementById('p-hp-bar').style.background=pHp<25?'linear-gradient(90deg,#cc0000,#ff3300)':'linear-gradient(90deg,#00cc55,#44ffaa)';
-  document.getElementById('p-ep-bar').style.width=Math.max(0,pEp)+'%';
-  document.getElementById('e-hp-bar').style.width=Math.max(0,eHp)+'%';
-  if(isPlayerTurn&&!battleLocked){
-    document.querySelectorAll('.skill-btn').forEach(function(b){
-      var sk=SKILLS[b.dataset.sid];
-      if(!sk)return;
-      // 必殺技使用済みチェック
-      if(sk.isUlt&&ultUsedThisBattle){
-        b.disabled=true;
-        b.classList.add('ult-used');
-      } else {
-        b.disabled=curCharData.ep<sk.ep;
-        b.classList.remove('ult-used');
-      }
-    });
-  }
-  renderEfx('player-efx',bState.player.buffs);renderEfx('enemy-efx',bState.enemy.buffs);
-}
-
-function refreshUltButtons(){
-  document.querySelectorAll('.skill-btn').forEach(function(b){
-    var sk=SKILLS[b.dataset.sid];if(!sk||!sk.isUlt)return;
-    if(ultUsedThisBattle){
-      b.disabled=true;
-      b.classList.add('ult-used');
-    }
-  });
-}
-
-function renderEfx(id,buffs){var el=document.getElementById(id);el.innerHTML='';buffs.forEach(function(b){var sp=document.createElement('span');sp.className='efx '+((b.type==='poison'||b.type==='atk_down')?'efx-debuff':'efx-buff');sp.innerText=b.name+'('+b.duration+')';el.appendChild(sp);});}
-function logMsg(msg,color){var pnl=document.getElementById('log-panel');pnl.innerHTML+='<div class="log-line" style="color:'+(color||'#556')+'">'+msg+'</div>';pnl.scrollTop=pnl.scrollHeight;}
-function toggleBtns(dis){document.querySelectorAll('.skill-btn').forEach(function(b){if(!dis)return;b.disabled=true;});}
-
-// COMBO
-function addCombo(){comboCount=Math.min(9,comboCount+1);if(!gameData.stats.maxCombo||comboCount>gameData.stats.maxCombo)gameData.stats.maxCombo=comboCount;if(comboCount>getCS('maxCombo'))addCS('maxCombo',comboCount-getCS('maxCombo'));updateComboUI();}
-function resetCombo(){comboCount=0;updateComboUI();}
-function updateComboUI(){var el=document.getElementById('combo-display');if(!el)return;if(comboCount>=2){el.innerText=comboCount+'× COMBO';el.classList.add('show');}else{el.classList.remove('show');}}
-function getComboMult(){return 1+(comboCount*0.06);}
-
-// CUTSCENE
-function playCutscene(callback){
-  var cs=selectedCharDef.cutscene,layer=document.getElementById('cutscene-layer'),titleEl=document.getElementById('cs-title'),linesEl=document.getElementById('cs-lines-container'),charCvs=document.getElementById('cs-canvas'),bgFlash=document.getElementById('cs-bg-flash');
-  layer.style.display='flex';titleEl.innerText=selectedCharDef.ultName||selectedCharDef.name;titleEl.style.color=cs.textColor;titleEl.style.textShadow='0 0 28px '+cs.textColor;
-  bgFlash.style.background=cs.bgColor;bgFlash.style.animation='none';void bgFlash.offsetWidth;bgFlash.style.animation='csFlash 1.5s forwards';
-  charCvs.classList.remove('cs-anim-char');titleEl.classList.remove('cs-anim-text');void charCvs.offsetWidth;
-  var ctx=charCvs.getContext('2d');pxclr(ctx);selectedCharDef.sprite.draw(ctx,30);
-  charCvs.classList.add('cs-anim-char');titleEl.classList.add('cs-anim-text');
-  linesEl.style.color=cs.textColor;
-  function showLine(i){if(i>=cs.lines.length)return;linesEl.innerText=cs.lines[i];linesEl.style.opacity='1';setTimeout(function(){linesEl.style.opacity='0';setTimeout(function(){showLine(i+1);},180);},280);}
-  setTimeout(function(){showLine(0);},80);
-  setTimeout(function(){layer.style.display='none';callback();},1500);
-}
-
-// COMBAT
-function execPlayerTurn(sid){
-  var sk=SKILLS[sid];
-  if(!isPlayerTurn||battleLocked||curCharData.ep<sk.ep)return;
-  // ▼▼▼ 必殺技: 使用済みチェック ▼▼▼
-  if(sk.isUlt&&ultUsedThisBattle){
-    showToast('⚡ 必殺技はバトル中1回のみ使用できます！');
-    return;
-  }
-  isPlayerTurn=false;battleLocked=true;toggleBtns(true);curCharData.ep-=sk.ep;
-  logMsg(selectedCharDef.name+'の【'+sk.name+'】！',selectedCharDef.color);
-  // ▼▼▼ 必殺技フラグON ▼▼▼
-  if(sk.isUlt){
-    ultUsedThisBattle=true;
-    logMsg('⚡ 必殺技発動！（このバトル中は使用不可になります）','var(--gold)');
-  }
-  var doAction=function(){
-    var ps=document.getElementById('player-sprite');
-    if(ps){ps.style.transition='transform .12s';ps.style.transform='scale(1.2) translateX(8px)';setTimeout(function(){ps.style.transform='';},200);}
-    sk.action(curCharData,eData.cur,bState.enemy);updateBUI();refreshUltButtons();if(checkEnd())return;
-    setTimeout(function(){processTurn(curCharData,bState.player,selectedCharDef.name);if(checkEnd())return;setTimeout(enemyTurn,650);},500);
-  };
-  if(sk.isUlt)playCutscene(doAction);else doAction();
-}
-
-function enemyTurn(){
-  var e=eData.cur,heavy=e.isBoss?(Math.random()<.4):(Math.random()<.3);
-  logMsg(e.name+'の'+(heavy?'【強攻撃】':'【攻撃】')+'！','#ff4466');
-  resetCombo();
-  var es=document.getElementById('enemy-sprite');
-  if(es){es.style.transition='transform .12s';es.style.transform='scale(1.2) translateX(-8px)';setTimeout(function(){es.style.transform='';},200);}
-  dealDmg(eData.cur,curCharData,heavy?1.7:1.0,bState.player);updateBUI();if(checkEnd())return;
-  setTimeout(function(){
-    processTurn(eData.cur,bState.enemy,e.name);if(checkEnd())return;
-    curCharData.ep=Math.min(curCharData.maxEp,curCharData.ep+13);isPlayerTurn=true;battleLocked=false;updateBUI();refreshUltButtons();logMsg('▶ ターン開始','#334');
-  },500);
-}
-
-function dealDmg(atk,def,mult,defState){
-  var atkState=(atk===curCharData)?bState.player:bState.enemy;var av=atk.atk||10;
-  atkState.buffs.forEach(function(b){if(b.type==='atk_up')av*=1.5;if(b.type==='atk_down')av*=.75;});
-  defState.buffs.forEach(function(b){if(b.type==='def_up')mult*=.5;});
-  var comboM=(atk===curCharData)?getComboMult():1;
-  var defStat=(def===curCharData)?curCharData.def:0;
-  var dmg=Math.max(1,Math.floor(av*mult*comboM*(.88+Math.random()*.26)-defStat*0.4));
-  def.hp=Math.max(0,def.hp-dmg);
-  logMsg(dmg+' ダメージ！'+(comboM>1?' COMBO×'+comboCount+'!':''),'#aaa');
-  spawnPop(def===eData.cur?'enemy-card':'player-card',dmg,'#ffffff');shakeCard(def===eData.cur?'enemy-card':'player-card');
-  return dmg;
-}
-function applyBuff(target,stateObj,type,duration,name){var ex=null;for(var i=0;i<stateObj.buffs.length;i++)if(stateObj.buffs[i].type===type){ex=stateObj.buffs[i];break;}if(ex)ex.duration=duration;else stateObj.buffs.push({type:type,duration:duration,name:name});logMsg(name+'付与 ('+duration+'T)',(type==='poison'||type==='atk_down')?'var(--magenta)':'var(--green)');}
-function healHP(target,pct){var amt=Math.floor(target.maxHp*pct);target.hp=Math.min(target.maxHp,target.hp+amt);logMsg('HP +'+amt+' 回復！','var(--green)');spawnPop(target===curCharData?'player-card':'enemy-card','+'+amt,'#44ffaa',true);}
-function processTurn(charData,stateObj,name){
-  stateObj.buffs.forEach(function(b){if(b.type==='poison'){var pd=Math.floor(charData.maxHp*.09);charData.hp=Math.max(0,charData.hp-pd);logMsg(name+' 毒 -'+pd,'var(--magenta)');spawnPop(charData===curCharData?'player-card':'enemy-card',pd,'#ff44aa');}});
-  stateObj.buffs.forEach(function(b){b.duration--;});stateObj.buffs=stateObj.buffs.filter(function(b){return b.duration>0;});updateBUI();
-}
-function spawnPop(cardId,val,color,isHeal){
-  var card=document.getElementById(cardId);if(!card)return;
-  var pop=document.createElement('div');pop.className='dmg-pop';pop.innerText=val;pop.style.color=color;
-  pop.style.top=(8+Math.random()*28)+'%';pop.style.left=(10+Math.random()*40)+'%';pop.style.textShadow='0 0 8px '+color;
-  card.appendChild(pop);setTimeout(function(){if(pop.parentNode)pop.remove();},850);
-}
-function shakeCard(id){var c=document.getElementById(id);if(!c)return;c.classList.remove('hit-anim');void c.offsetWidth;c.classList.add('hit-anim');setTimeout(function(){c.classList.remove('hit-anim');},300);}
-
-// ═══════════════════════ ITEM DROP POPUP ═══════════════════════
-function showDropPopup(item,callback){
-  var overlay=document.createElement('div');overlay.className='item-drop-overlay';
-  var rarityNames={common:'コモン',rare:'レア',epic:'エピック',legend:'レジェンド'};
-  overlay.innerHTML='<div class="item-drop-box"><div style="font-size:11px;color:'+RARITY_COLOR[item.rarity]+';font-family:Orbitron,sans-serif;letter-spacing:2px;margin-bottom:4px;">'+rarityNames[item.rarity]+' DROP！</div><div class="item-drop-icon">'+item.icon+'</div><div class="item-drop-name" style="color:'+RARITY_COLOR[item.rarity]+'">'+item.name+'</div><div class="item-drop-stats">'+itemStatString(item)+'</div><button class="btn gold" style="margin-top:4px;" id="drop-ok-btn">GET！</button></div>';
-  document.body.appendChild(overlay);
-  document.getElementById('drop-ok-btn').addEventListener('click',function(){overlay.remove();callback();});
-}
-
-function checkEnd(){
-  if(eData.cur.hp<=0){
-    battleLocked=true;logMsg('🎉 VICTORY！','var(--green)');
-    if(eAnim){eAnim.stop();var es=eAnim.cvs;if(es){es.style.transition='filter .5s,opacity .5s';es.style.filter='brightness(0)';es.style.opacity='.1';}}
-    var baseCoin=Math.floor(22+Math.random()*30*Math.ceil(currentBattleStage/3));
-    var coin=isChallenge?Math.floor(baseCoin*1.5):baseCoin;var dust=0;
-    gameData.coin+=coin;
-    gameData.stats.kills=(gameData.stats.kills||0)+1;
-    gameData.stats.totalCoins=(gameData.stats.totalCoins||0)+coin;
-    if(!gameData.stats.clears)gameData.stats.clears={};
-    gameData.stats.clears[currentBattleStage]=(gameData.stats.clears[currentBattleStage]||0)+1;
-    addCS('kills',1);addCS('totalCoins',coin);
-    if(currentBattleStage>=gameData.level)gameData.level=currentBattleStage+1;
-    logMsg('🪙 COIN ×'+coin+(isChallenge?' [チャレンジ+50%]':''),'var(--gold)');
-    var coreChance=eData.cur.isBoss?1.0:(isChallenge?0.35:0.18);
-    if(Math.random()<coreChance){gameData.core++;logMsg('💎 VOID CORE ×1 ドロップ！','var(--purple)');}
-    var dustChance=isChallenge?0.6:0.3;
-    if(Math.random()<dustChance){dust=Math.floor(1+Math.random()*2);gameData.dust+=dust;logMsg('🔮 ダスト ×'+dust+' ドロップ！','#cc99ff');}
-    var itemChance=eData.cur.isBoss?0.85:(isChallenge?0.5:0.25);
-    var doFinish=function(){
-      if(eAnim&&eAnim.cvs){eAnim.cvs.style.filter='';eAnim.cvs.style.opacity='';}
-      if(isChallenge){gameData.stats.challengeClears=(gameData.stats.challengeClears||0)+1;addCS('challengeClears',1);}
-      checkAchievements();saveGame();
-      showToast('🎊 Stage '+(isChallenge?'[CH] ':'')+'Clear！');
-      setTimeout(function(){switchScreen('map');},900);
-    };
-    setTimeout(function(){
-      var inv=getSharedInventory();
-      if(Math.random()<itemChance&&inv.length<40){
-        var item=rollItem(eData.cur.isBoss?'rare':isChallenge?'rare':'common',selectedCharId);addToInventory(item);
-        showDropPopup(item,doFinish);
-      } else {doFinish();}
-    },1200);return true;
-  }
-  if(curCharData.hp<=0){
-    battleLocked=true;logMsg('💀 AGENT DOWN...','var(--magenta)');resetCombo();saveGame();
-    setTimeout(function(){showToast('😢 敗北…マップへ戻ります');setTimeout(function(){switchScreen('map');},900);},1400);return true;
-  }
-  return false;
-}
-
-// ═══════════════════════ TOAST ═══════════════════════
-function showToast(msg){var t=document.createElement('div');t.className='toast';t.innerText=msg;document.body.appendChild(t);setTimeout(function(){if(t.parentNode)t.remove();},2700);}
-
-// ═══════════════════════ INIT ═══════════════════════
-// Discord コールバック処理（ページ読み込み時）
-checkDiscordCallback();
-
-// ローカル保存済みアカウント情報を復元
-(function(){
-  var saved = localStorage.getItem(ACCOUNT_KEY);
-  if (saved) {
-    try {
-      accountInfo = JSON.parse(saved);
-      // Firebaseのauth stateが確定するまでUIを即時更新
-      updateAccountUI();
-      onAccountSignIn(accountInfo);
-    } catch(e) { localStorage.removeItem(ACCOUNT_KEY); }
-  }
-})();
-
-checkSaveOnStart();
-initCharSelect();
-</script>
 </body>
 </html>

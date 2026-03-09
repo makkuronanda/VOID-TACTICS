@@ -12,8 +12,7 @@ var FIREBASE_CONFIG = {
   appId:             "1:967293890321:web:09dc8b72ac3dd997d626b0"
 };
 
-var DISCORD_CLIENT_ID = "YOUR_DISCORD_CLIENT_ID";
-var DISCORD_REDIRECT_URI = window.location.href.split('#')[0].split('?')[0];
+
 
 var fbApp = null, fbAuth = null, fbDb = null, firebaseReady = false;
 (function initFirebase() {
@@ -47,43 +46,6 @@ function signInWithGoogle() {
   fbAuth.signInWithPopup(provider).then(function() { showAuthLoading(false); }).catch(function(e) { showAuthLoading(false); showToast('❌ Googleログイン失敗'); });
 }
 
-function signInWithApple() {
-  if (!firebaseReady) { showFirebaseNotice(); return; }
-  var provider = new firebase.auth.OAuthProvider('apple.com');
-  provider.addScope('email'); provider.addScope('name');
-  showAuthLoading(true);
-  fbAuth.signInWithPopup(provider).then(function() { showAuthLoading(false); }).catch(function(e) { showAuthLoading(false); showToast('❌ Appleログイン失敗'); });
-}
-
-function signInWithDiscord() {
-  if (DISCORD_CLIENT_ID === 'YOUR_DISCORD_CLIENT_ID') { showToast('⚠ Discord Client IDを設定してください'); return; }
-  var state = Math.random().toString(36).slice(2);
-  sessionStorage.setItem('discord_state', state);
-  var url = 'https://discord.com/oauth2/authorize?client_id=' + DISCORD_CLIENT_ID + '&redirect_uri=' + encodeURIComponent(DISCORD_REDIRECT_URI) + '&response_type=token&scope=identify&state=' + state;
-  saveGame(); window.location.href = url;
-}
-
-function checkDiscordCallback() {
-  var hash = window.location.hash;
-  if (!hash || hash.indexOf('access_token') < 0) return;
-  var params = {};
-  hash.slice(1).split('&').forEach(function(p) { var kv = p.split('='); params[kv[0]] = decodeURIComponent(kv[1] || ''); });
-  if (!params.access_token) return;
-  var savedState = sessionStorage.getItem('discord_state');
-  if (savedState && params.state !== savedState) { showToast('❌ Discord state不一致'); return; }
-  sessionStorage.removeItem('discord_state');
-  history.replaceState(null, '', window.location.pathname);
-  showAuthLoading(true);
-  fetch('https://discord.com/api/users/@me', { headers: { 'Authorization': 'Bearer ' + params.access_token } })
-  .then(function(r) { return r.json(); })
-  .then(function(user) {
-    showAuthLoading(false);
-    accountInfo = { uid: 'discord_' + user.id, name: user.username, email: user.email || '', photoURL: user.avatar ? 'https://cdn.discordapp.com/avatars/' + user.id + '/' + user.avatar + '.png' : null, provider: 'discord' };
-    localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountInfo));
-    onAccountSignIn(accountInfo);
-    showToast('🎮 Discordでログイン: ' + accountInfo.name);
-  }).catch(function() { showAuthLoading(false); showToast('❌ Discord情報取得失敗'); });
-}
 
 function onFirebaseSignIn(firebaseUser) {
   var providerData = firebaseUser.providerData[0];
@@ -98,31 +60,68 @@ function onFirebaseSignOut() {
 }
 
 function onAccountSignIn(info) {
-  var hasAccountSave = !!localStorage.getItem(getSaveKey());
-  var hasLocalSave   = !!localStorage.getItem(LOCAL_SAVE_KEY) && LOCAL_SAVE_KEY !== getSaveKey();
-  if (hasAccountSave) { loadSave(); checkSaveOnStart(); } 
-  else if (hasLocalSave) { loadSaveFromKey(LOCAL_SAVE_KEY); checkSaveOnStart(); }
   updateAccountUI();
-
-  if (firebaseReady && fbDb) {
-    cloudLoad(function(cloudData) {
-      if (cloudData) {
-        var localTs = gameData._savedAt || 0, cloudTs = cloudData._savedAt || 0;
-        if (cloudTs > localTs) {
-          gameData = cloudData;
-          if (!gameData.inventory) gameData.inventory = [];
-          if (!gameData.roster) gameData.roster = {};
-          if (!gameData.stats) gameData.stats = {kills:0,totalCoins:0,clears:{}};
-          saveGame(); checkSaveOnStart(); showToast('☁ クラウドデータを復元しました');
-        }
-      }
-    });
-  }
 
   var sb = document.getElementById('sync-badge');
   if (sb) { sb.className = firebaseReady ? 'account-sync-badge sync-cloud' : 'account-sync-badge sync-local'; sb.textContent = firebaseReady ? '☁ CLOUD' : '💾 LOCAL'; }
   var migBanner = document.getElementById('migrate-banner');
-  if (migBanner) migBanner.style.display = hasLocalSave && !hasAccountSave ? 'block' : 'none';
+  if (migBanner) migBanner.style.display = 'none';
+
+  if (firebaseReady && fbDb) {
+    // クラウドを最初に確認し、新しい方を採用する
+    cloudLoad(function(cloudData) {
+      var localTs = 0;
+      var hasAccountSave = !!localStorage.getItem(getSaveKey());
+      if (hasAccountSave) {
+        try {
+          var localRaw = localStorage.getItem(getSaveKey());
+          var localParsed = JSON.parse(localRaw);
+          localTs = (localParsed && localParsed.gameData && localParsed.gameData._savedAt) || 0;
+        } catch(e) {}
+      }
+
+      if (cloudData && (cloudData._savedAt || 0) >= localTs) {
+        // クラウドが新しい or 同等 → クラウドを採用
+        gameData = cloudData;
+        if (!gameData.inventory) gameData.inventory = [];
+        if (!gameData.roster)    gameData.roster = {};
+        if (!gameData.stats)     gameData.stats = {kills:0,totalCoins:0,clears:{}};
+        // ローカルに保存してからselectedCharIdも復元
+        try {
+          var localRaw2 = localStorage.getItem(getSaveKey());
+          var localParsed2 = localRaw2 ? JSON.parse(localRaw2) : null;
+          if (localParsed2 && localParsed2.selectedCharId) selectedCharId = localParsed2.selectedCharId;
+        } catch(e) {}
+        localStorage.setItem(getSaveKey(), JSON.stringify({gameData:gameData, selectedCharId:selectedCharId}));
+        if ((cloudData._savedAt || 0) > localTs) showToast('☁ クラウドデータを復元しました');
+      } else if (hasAccountSave) {
+        // ローカルが新しい → ローカルを読んでクラウドに同期
+        loadSave();
+        cloudSave();
+      } else {
+        // どちらもない → 新規
+      }
+
+      // selectedCharId に対応する curCharData をセット
+      if (selectedCharId) {
+        selectedCharDef = CHARACTER_DEFS.find(function(c) { return c.id === selectedCharId; });
+        if (selectedCharDef && gameData.roster && gameData.roster[selectedCharId]) {
+          curCharData = gameData.roster[selectedCharId];
+          if (!curCharData.charStats) curCharData.charStats = {kills:0,totalCoins:0,maxCombo:0,challengeClears:0};
+          if (!curCharData.unlockedAchieves) curCharData.unlockedAchieves = [];
+          recalcStats();
+        }
+      }
+      checkSaveOnStart();
+    });
+  } else {
+    // Firebase未使用 → ローカルのみ
+    var hasAccountSave = !!localStorage.getItem(getSaveKey());
+    var hasLocalSave   = !!localStorage.getItem(LOCAL_SAVE_KEY) && LOCAL_SAVE_KEY !== getSaveKey();
+    if (hasAccountSave) { loadSave(); }
+    else if (hasLocalSave) { loadSaveFromKey(LOCAL_SAVE_KEY); }
+    checkSaveOnStart();
+  }
 }
 
 function migrateLocalToCloud() {
@@ -894,7 +893,6 @@ function checkEnd(){
 function showToast(msg){var t=document.createElement('div');t.className='toast';t.innerText=msg;document.body.appendChild(t);setTimeout(function(){if(t.parentNode)t.remove();},2700);}
 
 // ═══════════════════════ INIT ═══════════════════════
-checkDiscordCallback();
 (function(){
   var saved = localStorage.getItem(ACCOUNT_KEY);
   if (saved) {
